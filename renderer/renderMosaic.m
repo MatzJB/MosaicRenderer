@@ -24,9 +24,6 @@ mosaicIndexed = [];
 
 tmp          = size( image_palette(1).samples ); % must match samples
 nSamples     = sqrt(tmp(1));
-%sample_space = image_palette.sampleSpace;
-
-%solid_mosels = false; % used to see how the samples are distributed?!??!!
 
 const = {};
 const.plot   = false;
@@ -45,9 +42,8 @@ if nargin==5 % override defaults with constants
         const.stats  = argconst.stats;
         const.debug  = argconst.debug;
         const.nocolors  = argconst.nocolors;
-        fprintf(1,'no colors! %d\n', const.nocolors);
     catch
-        fprintf(1, 'extra argument was not set correctly.\n');
+        error('all optional variables has to be defined')
     end
 end
 
