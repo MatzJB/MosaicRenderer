@@ -2,21 +2,27 @@
     Mosaic render batch script.
 %}
 
-
 reinit = true; % we wish to re-calculate the mosaic elements
 
-const = {};
-const.plot = false;
-const.render = true;
-const.stats  = false;
-const.debug  = false;
-const.nocolors  = true; %ignore colors
+collectConst = {};
+collectConst.stats   = false;
+collectConst.debug  = false;
+collectConst.blurMosels = false;
+collectConst.nSamples = 10;
+collectConst.skipMosel = 1;
 
-renderheight = 10000; % height of result (pixels)
+renderConst = {};
+renderConst.plot = true;
+renderConst.render = true;
+renderConst.stats  = false;
+renderConst.debug  = false;
+renderConst.nocolors  = true; %ignore colors
+
+renderheight = 5000; % height of result (pixels)
 
 % NOTE: specify path of mosaic images!!!
 moselsDir = 'C:\tmp\mix';
-palettePath = 'C:\tmp\palette temp'; % not actively used
+palettePath = 'C:\tmp\palette temp'; % not used
 outputDir = 'E:\Archive 2014\Projects\Mosaic\mosaicData';
 mosaicDir = 'E:\Archive 2014\Projects\Mosaic\To mosaic';
 mosaicPaletteDir = outputDir;
@@ -44,12 +50,12 @@ for ii = 1:nFiles
 end
 
 if reinit
-    r = 40;
+    r = 30;
     %c = r*1.6180;
     c = r*1.375;
-    nSamples = 70;
+    nSamples = 30;
     
-    [palette, samples] = collectMosaicData([r,c], moselsDir, palettePath, nSamples);
+    [palette, samples] = collectMosaicData([r,c], moselsDir, palettePath, collectConst);
     
     settingsStr = ['r=', num2str(r), ' nSamples=', num2str(nSamples)];
 
@@ -100,7 +106,7 @@ for i = 1:length(mosaicNames)
     fprintf(1, 'render...%s\n', mosaicName);
     %todo: add try/catch if file was erased during render
     
-    [mosaic, mosInds, mosMean] = renderMosaic(renderheight, palette, samples, mosaicName, const);
+    [mosaic, mosInds, mosMean] = renderMosaic(renderheight, palette, samples, mosaicName, renderConst);
     
     [pathStr, name, ext] = fileparts(mosaicName);
     outFilename = [outputDir, filesep, name, '_mosaic', '.png'];

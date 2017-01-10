@@ -1,5 +1,5 @@
 %collectMosaicData(mosaicSize, moselsDir[[, nSamples], blurMosaee])
-%  
+%
 %  collectMosaicData is a function processing mosaic elements returning two
 %  matrices: <palette> and <samples>. The function requires a image directory
 %  <moselsDir> and size of processed mosels <mosaicSize> as a vector [height, width] specifying mosel size in pixels.
@@ -11,26 +11,31 @@
 % todo: add option to control printouts
 function [image_palette, sample_space] = collectMosaicData(mosaicSize, moselsDir, varargin)
 
-% todo: remove skip and use a mosel filter system instead
-skip = 5; %pick each <skip> mosaee in the directory
+constants = {};
+constants.stats = false;
+constants.debug = false;
+constants.blurMosels = false;
+constants.nSamples = 10;
+constants.blurSigma = 0.5;
+constants.skipMosel = 1;
+constants.nPrgrs    = 10;
 
-% todo: add constants arg for samples, sigma etc
-if nargin==3 %number of samples
-    nSamples = varargin{1};
-else
-    nSamples   = 10; % n_samples^2 total samples per mosel is used
+if nargin==3 % override defaults with constants
+    try
+        argconst = varargin{1};
+        constants.stats = argconst.stats;
+        constants.debug = argconst.debug;
+        constants.blurMosels = argconst.blurmosels;
+        constants.nSamples = argconst.nSamples;
+        constants.blurSigma = argconst.blurSigma;
+        constants.skipMosel = argconst.skipMosel;
+        constants.nPrgrs    = argconst.nPrgrs;
+    catch
+        %error('all optional variables has to be defined')
+    end
 end
 
-if nargin==4 %should we blur mosaees prior to sampling, makes for better mosaics
-    blurMosaee = varargin{2};
-else
-    blurMosaee = false;
-end
-
-% todo: add sigma as argument or part of cell array
-sampleSigma = 0.6; % depends on n_samples, should be as small as possible, introduces black borders.
 % Larger mosels require filtering to provide nice samples
-nPrgrs      = 10; % number of prints from progress
 mosaicSize  = round(mosaicSize);
 % mosic element number of rows and columns (pixels)
 rMosel   = mosaicSize(1);
@@ -41,7 +46,7 @@ ratMosel = cMosel/rMosel; %ratio
 rMoselHD = 400; %experimental
 cMoselHD = round(rMoselHD*ratMosel);
 
-if nSamples>rMosel || nSamples>cMosel
+if constants.nSamples > rMosel || constants.nSamples > cMosel
     warning('Number of samples is larger than resolution of mosel')
 end
 
@@ -53,26 +58,28 @@ fprintf(1, 'Creating palette from %s...\n', pwd);
 
 tmpPwd     = pwd;
 
-%we might wish to simply supply path to moselsDir instead of moving there
+%todo: we might wish to simply supply path to moselsDir instead of moving there
 cd(moselsDir)
 imagefiles = dir('*');
 nFiles     = length(imagefiles);
 fprintf(1, 'Reading, cropping and sampling %d mosels...\n', nFiles);
 
-progPerc = linspace(0, 100, nPrgrs);
+progPerc = linspace(0, 100, constants.nPrgrs);
 i       = 1;
 iPrgs   = 1;
 
 %todo: (otimization) bypass if no blurring is used
-if blurMosaee
-blurKernel = single( fspecial('gaussian', [rMosel, cMosel], sampleSigma) );
+if constants.blurMosels
+    blurKernel = single( fspecial('gaussian', [rMosel, cMosel], constants.blurSigma) );
 else % bypassing blurring
-blurKernel = zeros(rMosel, cMosel);
-blurKernel(ceil(end*0.5), floor(end*0.5)+1) = 1;
+    blurKernel = zeros(rMosel, cMosel);
+    blurKernel(ceil(end*0.5), floor(end*0.5)+1) = 1;
 end
 
+debugRun = false; %flag to discern if we run debug print
+
 tPalette = tic;
-for ii = 3:skip:nFiles % skip . and ..
+for ii = 3:constants.skipMosel:nFiles % skip . and ..
     imname = imagefiles(ii).name;
     [pathstr, name, ext] = fileparts(imname);
     if ~strcmp(ext, '.jpeg') && ~strcmp(ext, '.jpg')
@@ -90,15 +97,16 @@ for ii = 3:skip:nFiles % skip . and ..
     %todo: rescale to a close-to-original size and crop, save as HQ
     %imTmpHq = rescaleAndCrop(im, [rMoselHD, cMoselHD]); % scale image so we can see
     % imTmpHq = im; % rescaleAndCrop(im, scale*[rMosel, cMosel]); % HD version of mosels
+    
     % todo: preallocate?
     image_palette(i).name = imname;
     moselBlurred = applyBlurFilter(single(imTmp), blurKernel);
-    [tmp_samples, coords]    = retrieveSamples(moselBlurred, nSamples);
+    [tmp_samples, coords]    = retrieveSamples(moselBlurred,  constants.nSamples);
     image_palette(i).samples = tmp_samples;
     image_palette(i).data    = imTmp; % the image
     image_palette(i).mean    = mean(tmp_samples); % used for histogram
     
-    if ii == 10
+    if constants.debug && ~debugRun
         figure
         imagesc(imTmp)
         figure
@@ -106,9 +114,10 @@ for ii = 3:skip:nFiles % skip . and ..
         axis off
         hold on
         plot(coords(:, 2), coords(:, 1), 'rO')
-        title('One Mosel, gaussian filtered with coordinates of the samples', 'fontsize', 14)
+        title('One Mosel, gaussian filtered with coordinates of the samples', 'fontsize', 12)
         pause(1)
         drawnow
+        debugRun = true;
     end
     
     %{
@@ -125,7 +134,7 @@ for ii = 3:skip:nFiles % skip . and ..
     %image_palette2(i).largedata = imTmpHq; %higher resolution version of the mosaic element
     
     % printouts
-    if mod(i, round(nFiles/nPrgrs))==0
+    if mod(i, round(nFiles/constants.nPrgrs))==0
         fprintf(1, '%d...', round(progPerc(iPrgs)));
         iPrgs = iPrgs+1;
     end

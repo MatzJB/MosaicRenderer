@@ -43,7 +43,7 @@ if nargin==5 % override defaults with constants
         const.debug  = argconst.debug;
         const.nocolors  = argconst.nocolors;
     catch
-        error('all optional variables has to be defined')
+        %error('all optional variables has to be defined')
     end
 end
 
