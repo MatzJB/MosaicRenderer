@@ -15,14 +15,14 @@
 %       the render (default: 10)
 
 
-function [mosaic, mosaicIndexed, mosaicMean] = renderMosaic(rMosaic, image_palette, sample_space, mosaicName, varargin)
+function [mosaic, mosaicIndexed, mosaicMean] = renderMosaic(rMosaic, palette, sample_space, mosaicName, varargin)
 
 warning('off', 'images:initSize:adjustingMag');
 
 mosaic = [];
 mosaicIndexed = [];
 
-tmp          = size( image_palette(1).samples ); % must match samples
+tmp          = size( palette(1).samples ); % must match samples
 nSamples     = sqrt(tmp(1));
 
 const = {};
@@ -50,16 +50,8 @@ end
 if const.nocolors
     fprintf(1, 'converting samples to grayscale...\n');
     %vector containing [R,G,B,R,G,B,...]
-    rg = size(image_palette(1).samples, 2); % rows after grouping in RGB
-    rs = size(image_palette(:), 1); % number of samples
-    for ii=1:rs
-        dataBW = rgb2gray(image_palette(ii).data);
-        dataRGB = cat(3, dataBW, dataBW, dataBW);
-        image_palette(ii).data = dataRGB;
-        samples = image_palette(ii).samples;
-        tmp = rgb2gray(reshape(samples(1,:), rg/3, 3)/255);
-        image_palette(ii).samples = tmp(:);
-    end
+
+palette = paletteToGray(palette);
 end
 
 try
@@ -81,7 +73,7 @@ ratio = c/r;
 cMosaic  = ratio*rMosaic;
 imMosaic = imresize(mosaee, [rMosaic, cMosaic]);
 
-mosDim = size(image_palette(1).data);
+mosDim = size(palette(1).data);
 rIndex = ceil(r/mosDim(1));
 cIndex = ceil(c/mosDim(2));
 
@@ -137,13 +129,13 @@ for y = 1:mosDim(1):rMosaic - mosDim(1)
             dist_best = Inf;
             i_best = 1;
             % find the closest color in the palette
-            if length(image_palette)==1
+            if length(palette)==1
                 error('Palette only has one mosel.')
             end
             
-            for i = 1:length(image_palette)
+            for i = 1:length(palette)
                 % im_tmp = image_palette(i).data;
-                cand_samples = image_palette(i).samples;
+                cand_samples = palette(i).samples;
                 dist = 0;
                 for j = 1:size(source_samples, 1)
                     dist = dist + ( tone_distance(source_samples(j, :), cand_samples(j, :)) );
@@ -160,11 +152,11 @@ for y = 1:mosDim(1):rMosaic - mosDim(1)
         %Place in mosaic matrix in steps of r_mosel and c_mosel
         %for each y that is scanned r_step at a time, we need to place a mosel in
         %that position
-        tmp = image_palette(i_best).data;
+        tmp = palette(i_best).data;
         iIndex = ceil(y/mosDim(1));
         jIndex = ceil(x/mosDim(2));
         mosaicIndexed(iIndex, jIndex) = i_best;
-        tmpMean = image_palette(i_best).mean;
+        tmpMean = palette(i_best).mean;
         %todo: clean up
         mosaicMean(yStart*mosDim(1)+1:(yStart+1)*mosDim(1), xStart*mosDim(2)+1:(xStart+1)*mosDim(2), 1) = tmpMean(1);
         mosaicMean(yStart*mosDim(1)+1:(yStart+1)*mosDim(1), xStart*mosDim(2)+1:(xStart+1)*mosDim(2), 2) = tmpMean(2);

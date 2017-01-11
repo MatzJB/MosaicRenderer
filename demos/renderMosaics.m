@@ -9,16 +9,16 @@ collectConst.stats   = false;
 collectConst.debug  = false;
 collectConst.blurMosels = false;
 collectConst.nSamples = 10;
-collectConst.skipMosel = 1;
+collectConst.skipMosel = 5;
 
 renderConst = {};
 renderConst.plot = true;
 renderConst.render = true;
 renderConst.stats  = false;
 renderConst.debug  = false;
-renderConst.nocolors  = true; %ignore colors
+renderConst.nocolors  = false; %ignore colors
 
-renderheight = 3000; % height of result (pixels)
+renderheight = 5000; % height of result (pixels)
 
 % NOTE: specify path of mosaic images!!!
 moselsDir = 'C:\tmp\mix';
@@ -49,11 +49,10 @@ if reinit
     r = 30;
     %c = r*1.6180;
     c = r*1.375;
-    nSamples = 20;
-    
+        
     [palette, samples] = collectMosaicData([r,c], moselsDir, palettePath, collectConst);
     
-    settingsStr = ['r=', num2str(r), ' nSamples=', num2str(nSamples)];
+    settingsStr = ['r=', num2str(r), ' nSamples=', num2str(collectConst.nSamples)];
 
     save([mosaicPaletteDir, filesep, 'palette - ', moselProjectname, ' ', settingsStr, '.mat'], 'palette');
     save([mosaicPaletteDir, filesep, 'samples - ', moselProjectname, ' ', settingsStr, '.mat'], 'samples');
