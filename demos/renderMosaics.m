@@ -18,7 +18,7 @@ renderConst.stats  = false;
 renderConst.debug  = false;
 renderConst.nocolors  = true; %ignore colors
 
-renderheight = 5000; % height of result (pixels)
+renderheight = 3000; % height of result (pixels)
 
 % NOTE: specify path of mosaic images!!!
 moselsDir = 'C:\tmp\mix';
@@ -26,10 +26,6 @@ palettePath = 'C:\tmp\palette temp'; % not used
 outputDir = 'E:\Archive 2014\Projects\Mosaic\mosaicData';
 mosaicDir = 'E:\Archive 2014\Projects\Mosaic\To mosaic';
 mosaicPaletteDir = outputDir;
-
-% extensions for palette and samples
-palExt = '.pal';
-samExt = '.sam';
 
 moselProjectname = strsplit(moselsDir, filesep);
 moselProjectname = moselProjectname(end);
@@ -53,18 +49,18 @@ if reinit
     r = 30;
     %c = r*1.6180;
     c = r*1.375;
-    nSamples = 30;
+    nSamples = 20;
     
     [palette, samples] = collectMosaicData([r,c], moselsDir, palettePath, collectConst);
     
     settingsStr = ['r=', num2str(r), ' nSamples=', num2str(nSamples)];
 
-    save([mosaicPaletteDir, filesep, moselProjectname,' ', settingsStr, palExt], 'palette');
-    save([mosaicPaletteDir, filesep, moselProjectname,' ', settingsStr, samExt], 'samples');
+    save([mosaicPaletteDir, filesep, 'palette - ', moselProjectname, ' ', settingsStr, '.mat'], 'palette');
+    save([mosaicPaletteDir, filesep, 'samples - ', moselProjectname, ' ', settingsStr, '.mat'], 'samples');
 else % load precalculated sample and palette file
     try
-        sampleFiles  = dir([outputDir, filesep, '*', samExt]);
-        paletteFiles = dir([outputDir, filesep, '*', palExt]);
+        sampleFiles  = dir([outputDir, filesep, 'samples*']);
+        paletteFiles = dir([outputDir, filesep, 'palette*']);
         n = length(sampleFiles);
         
         if n>1
@@ -115,7 +111,7 @@ for i = 1:length(mosaicNames)
     imwrite(mosaic, outFilename, 'png')
     imwrite(mosMean/255, mosaicMeanName, 'png')
     save(mosaicIndexedName, 'mosInds');
-    
+    mosInds(1:5,1:5,1)
     fprintf(1, 'Saved %s\n\n', outFilename);
 end
 toc(tTotal)
