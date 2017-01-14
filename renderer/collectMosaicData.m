@@ -9,15 +9,16 @@
 %                      gaussian filter, otherwise, no filter is used.
 
 % todo: add option to control printouts
-function [image_palette, sample_space] = collectMosaicData(mosaicSize, moselsDir, varargin)
+% todo: support really skipping mosels
+function [palette, sample_space] = collectMosaicData(mosaicSize, moselsDir, varargin)
 
 constants = {};
 constants.stats = false;
 constants.debug = false;
 constants.blurMosels = false;
 constants.nSamples = 10;
-constants.blurSigma = 0.5;
 constants.skipMosel = 1;
+constants.blurSigma = 0.5;
 constants.nPrgrs    = 10;
 
 if nargin==3 % override defaults with constants
@@ -25,15 +26,17 @@ if nargin==3 % override defaults with constants
         argconst = varargin{1};
         constants.stats = argconst.stats;
         constants.debug = argconst.debug;
-        constants.blurMosels = argconst.blurmosels;
+        constants.blurMosels = argconst.blurMosels;
         constants.nSamples = argconst.nSamples;
-        constants.blurSigma = argconst.blurSigma;
         constants.skipMosel = argconst.skipMosel;
+        constants.blurSigma = argconst.blurSigma;
         constants.nPrgrs    = argconst.nPrgrs;
     catch
-        %error('all optional variables has to be defined')
+        warning('some variables were not defined by optional argumen')
     end
 end
+
+fprintf(1,'skip: %d\n', constants.skipMosel);
 
 % Larger mosels require filtering to provide nice samples
 mosaicSize  = round(mosaicSize);
@@ -46,11 +49,14 @@ ratMosel = cMosel/rMosel; %ratio
 rMoselHD = 400; %experimental
 cMoselHD = round(rMoselHD*ratMosel);
 
+
+
+
+
 if constants.nSamples > rMosel || constants.nSamples > cMosel
     warning('Number of samples is larger than resolution of mosel')
 end
 
-%scale = 9; % high quality version size (ratio scale:=<large version>/<small>)
 % todo: remove speedup option
 speedup    = 1; % optimized code
 
@@ -65,7 +71,7 @@ nFiles     = length(imagefiles);
 fprintf(1, 'Reading, cropping and sampling %d mosels...\n', nFiles);
 
 progPerc = linspace(0, 100, constants.nPrgrs);
-i       = 1;
+
 iPrgs   = 1;
 
 %todo: (otimization) bypass if no blurring is used
@@ -78,6 +84,13 @@ end
 
 debugRun = false; %flag to discern if we run debug print
 
+nElement = ceil(nFiles/constants.skipMosel);
+for i=1:nElement
+    palette(1).data = zeros(rMosel, cMosel, 3);
+end
+
+
+i       = 1;
 tPalette = tic;
 for ii = 3:constants.skipMosel:nFiles % skip . and ..
     imname = imagefiles(ii).name;
@@ -96,15 +109,15 @@ for ii = 3:constants.skipMosel:nFiles % skip . and ..
     imTmp = rescaleAndCrop(im, [rMosel, cMosel]); % scale image so we can see
     %todo: rescale to a close-to-original size and crop, save as HQ
     %imTmpHq = rescaleAndCrop(im, [rMoselHD, cMoselHD]); % scale image so we can see
-    % imTmpHq = im; % rescaleAndCrop(im, scale*[rMosel, cMosel]); % HD version of mosels
+    %imTmpHq = im; % rescaleAndCrop(im, scale*[rMosel, cMosel]); % HD version of mosels
     
     % todo: preallocate?
-    image_palette(i).name = imname;
+    palette(i).name = imname;
     moselBlurred = applyBlurFilter(single(imTmp), blurKernel);
     [tmp_samples, coords]    = retrieveSamples(moselBlurred,  constants.nSamples);
-    image_palette(i).samples = tmp_samples;
-    image_palette(i).data    = imTmp; % the image
-    image_palette(i).mean    = mean(tmp_samples); % used for histogram
+    palette(i).samples = tmp_samples;
+    palette(i).data    = imTmp; % the image
+    palette(i).mean    = mean(tmp_samples); % used for histogram
     
     if constants.debug && ~debugRun
         figure
@@ -163,18 +176,24 @@ end
 
 fprintf(1, 'Creating sample space coordinates...\n');
 % Preprocessing:
-M = size(image_palette, 2); %number of mosels
-N = numel(image_palette(1).samples); %total number of samples (RGB)
+M = size(palette, 2); %number of mosels
+N = numel(palette(1).samples); %total number of samples (RGB)
 sample_space = zeros(M, N); %matrix of all samples (M-by-N) m mosels with N samples (RGB)
 
 % Pack all samples into vectors in N^n space and search mosels using dsearchn
 if speedup
-    for ii = 1:M
-        sample_space(ii, :) = reshape(image_palette(ii).samples', 1, numel(image_palette(1).samples));
+    try
+        for ii = 1:M
+            sample_space(ii, :) = reshape(palette(ii).samples', 1, numel(palette(1).samples));
+        end
+    catch Exception
+        
+        fprintf(1,'an error occured with reshape \n')
+        numel(palette(1).samples)
+        size(palette(ii).samples')
     end
-end
-
-cd(tmpPwd)
-
+    
+    cd(tmpPwd)
+    
 end
 
