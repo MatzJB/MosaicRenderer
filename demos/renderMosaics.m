@@ -4,11 +4,9 @@
 
 constants %load constants used by this script
 
-reInit = false; % we wish to re-calculate the mosaic elements
+reInit = true; % we wish to re-calculate the mosaic elements
 
-if moselsDir(end) == filesep
-    moselsDir = moselsDir(1:end-1);
-end
+if moselsDir(end) == filesep, moselsDir = moselsDir(1:end-1); end
 
 moselProjectname = strsplit(moselsDir, filesep);
 moselProjectname = moselProjectname(end);
@@ -21,7 +19,7 @@ fprintf(1, 'mosel project name %s\n', moselProjectname);
 fprintf(1, 'Reading files to mosaic from %s...\n', mosaicDir);
 fprintf(1, 'Found %d image(s)\n', nFiles);
 
-mosaicNames = {};
+mosaicNames{nFiles} = 0;
 for ii = 1:nFiles
     imname = [mosaicDir,filesep,imagefiles(ii).name];
     mosaicNames{end+1} = imname;
