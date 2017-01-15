@@ -14,7 +14,6 @@
 %       nPrgrs   - number of progress printouts used during the course of
 %       the render (default: 10)
 
-
 function [mosaic, mosaicIndexed, mosaicMean] = renderMosaic(rMosaic, moselStruct, mosaicName, varargin)
 
 warning('off', 'images:initSize:adjustingMag');
@@ -23,17 +22,17 @@ mosaic = [];
 mosaicIndexed = [];
 palette = moselStruct.palette;
 
-tmp          = size( palette(1).samples ); % must match samples
-nSamples     = sqrt(tmp(1));
+tmp = size( palette(1).samples ); % must match samples
+nSamples = sqrt( tmp(1) );
 
-const = {};
 %default constants:
-const.plot   = false;
+const = {};
+const.plot = false;
 const.render = true;
-const.stats   = true;
-const.debug  = false;
-const.speedup  = true;
-const.nocolors  = false; %if true then ignore colors
+const.stats = true;
+const.debug = false;
+const.speedup = true;
+const.nocolors = false; %if true then ignore colors
 const.nPrgrs = 10;
 
 if nargin==4 % override defaults with constants
@@ -51,7 +50,7 @@ if nargin==4 % override defaults with constants
 end
 
 if const.stats
-fprintf(1,'speedup: %d\n', const.speedup);
+    fprintf(1, 'speedup: %d\n', const.speedup);
 end
 
 try
@@ -62,12 +61,8 @@ catch Exception
 end
 
 [r, c, d] = size(mosaee); % the image to be 'mosaiced'
-
-% support gray image
-if d==1, mosaee = cat(3, mosaee, mosaee, mosaee); end
-
-ratio = c/r;
-% we use the ratio of the mosaic image when we create the mosels
+if d==1, mosaee = cat(3, mosaee, mosaee, mosaee); end % support gray image
+ratio = c/r; % we use the ratio of the mosaic image when we create the mosels
 
 % specify the height of resulting mosaic (pixels)
 cMosaic  = ratio*rMosaic;
@@ -93,16 +88,17 @@ imMosaic = single(imMosaic);
 mosaic = single(imMosaic);
 mosaicMean = mosaic; % each mosic is the average color of the samples (for comparison)
 
-figure;
-h = imshow(mosaic/255.0);
-title('Mosaic (render)')
-drawnow
+if const.render
+    figure
+    h = imshow(mosaic/255.0);
+    title('Mosaic (render)')
+    drawnow
+    set(gcf, 'renderer', 'opengl')
+    hold on
+end
 
-set(gcf, 'renderer', 'opengl')
 ii = 0;
 jj = 0;
-%tt = 0; % used for controlling printouts
-hold on
 
 tRender = tic;
 for y = 1:mosDim(1):rMosaic - mosDim(1)
@@ -129,7 +125,7 @@ for y = 1:mosDim(1):rMosaic - mosDim(1)
             else
                 sampleSpace = moselStruct.sampleSpace;
             end
-                        
+            
             sourceVector = reshape(sourceSamples', 1, numel(sourceSamples));
             iBest = dsearchn(sampleSpace, sourceVector);
         else
@@ -193,9 +189,7 @@ for y = 1:mosDim(1):rMosaic - mosDim(1)
         end
     end
     
-    % todo: check this
     if const.stats && mod(ii, round( mosDim(1)/const.nPrgrs ))==1
-        %if const.stats && mod(tt, 15) == 0
         fprintf(1, 'Average speed: %d s/mosel\n', average_time);
         toc(tRender)
         fprintf(1, '  Finished: %d%%\n', ceil(100*y/(rMosaic-mosDim(1))));
@@ -204,12 +198,10 @@ for y = 1:mosDim(1):rMosaic - mosDim(1)
     end
 end
 
-
 if const.render
     mosaic = mosaic/255;
     set(h, 'cdata', mosaic)
     drawnow
-    pause(1)
 end
 
 toc(tRender)

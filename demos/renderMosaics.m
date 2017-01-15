@@ -4,7 +4,7 @@
 
 constants %load constants used by this script
 
-reInit = false; % we wish to re-calculate the mosaic elements
+reInit = true; % we wish to re-calculate the mosaic elements
 
 if moselsDir(end) == filesep, moselsDir = moselsDir(1:end-1); end
 

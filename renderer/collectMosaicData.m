@@ -5,18 +5,16 @@
 %  <moselsDir> and size of processed mosels <mosaicSize> as a vector [height, width] specifying mosel size in pixels.
 %
 %  Optional arguments: constants
-
-constants.stats = false;
-constants.debug = false;
-constants.blurMosels = false;
-constants.nSamples = 10;
-constants.skipMosel = 1;
-constants.blurSigma = 0.5;
-constants.nPrgrs = 10;
-%update
-%nSamples - the number of samples in one dimension (total number of samples over mosel is simply nSamples^2)
-%                      blurMosaee - if true the mosels are blurred using a
-%                      gaussian filter, otherwise, no filter is used.
+%
+%       stats - show statistics while collecting mosaic data (default)
+%       debug - showing debug prints and lines in render (default: false)
+%       blurMosels  - using speedier code. (default: false)
+%       nSamples - Number of samples used (one dimension)
+%       (default: 10)
+%       skipMosel - number of mosels skipped (useful when rendering frames
+%       from a move) (default:1)
+%       blurSigma - gaussian blur sigma
+%       nProfrs - number of progress printouts (default:10)
 
 % todo: add option to control printouts
 % todo: support really skipping mosels
@@ -46,8 +44,9 @@ if nargin==3 % override defaults with constants
     end
 end
 
-fprintf(1,'skip: %d\n', constants.skipMosel);
-
+if constants.debug
+    fprintf(1, 'skip: %d\n', constants.skipMosel);
+end
 % Larger mosels require filtering to provide nice samples
 mosaicSize  = round(mosaicSize);
 % mosic element number of rows and columns (pixels)
@@ -66,7 +65,9 @@ end
 % todo: remove speedup option
 speedup    = 1; % optimized code
 
-fprintf(1, 'Creating palette from %s...\n', pwd);
+if constants.debug
+    fprintf(1, 'Creating palette from %s...\n', pwd);
+end
 
 tmpPwd     = pwd;
 
@@ -74,7 +75,9 @@ tmpPwd     = pwd;
 cd(moselsDir)
 imagefiles = dir('*');
 nFiles     = length(imagefiles);
-fprintf(1, 'Reading, cropping and sampling %d mosels...\n', nFiles);
+if constants.debug
+    fprintf(1, 'Reading, cropping and sampling %d mosels...\n', nFiles);
+end
 
 progPerc = linspace(0, 100, constants.nPrgrs);
 
@@ -108,14 +111,14 @@ for ii = 3:constants.skipMosel:nFiles % skip . and ..
     end
     
     im = imread(imname);
-    if size(im,3)~=3 %we only accept RGB images
+    if constants.debug && size(im,3)~=3 %we only accept RGB images
         fprintf(1, 'image %s not RGB, skipping\n', imname);
         continue
     end
     
     imTmp = rescaleAndCrop(im, [rMosel, cMosel]); % scale image so we can see
     palette(index).name = imname;
-
+    
     % get samples, decide if blurred, BW too
     if constants.blurMosels
         imTmp = applyBlurFilter(single(imTmp), blurKernel);
@@ -144,19 +147,22 @@ for ii = 3:constants.skipMosel:nFiles % skip . and ..
         drawnow
         debugRun = true;
     end
-        
+    
     % printouts
-    if mod(index, round(nFiles/constants.nPrgrs))==0
+    if constants.stats && mod(index, round(nFiles/constants.nPrgrs))==0
         fprintf(1, '%d...', round(progPerc(iPrgs)));
         iPrgs = iPrgs+1;
     end
     index = index+1;
 end
 
-fprintf(1, '100.\n');
-toc(tPalette)
-fprintf(1, 'Found %d mosaics\n', index);
-fprintf(1, 'Creating sample space coordinates...\n');
+if constants.stats
+    fprintf(1, '100.\n');
+    toc(tPalette)
+    fprintf(1, 'Found %d mosaics\n', index);
+    fprintf(1, 'Creating sample space coordinates...\n');
+end
+
 % Preprocessing:
 M = size(palette, 2); %number of mosels
 N = numel(palette(1).samples); %total number of samples (RGB)
@@ -171,9 +177,9 @@ if speedup
             sampleSpaceBW(ii, :) = reshape(palette(ii).samplesBW', 1, numel(palette(1).samplesBW));
         end
     catch Exception
-        fprintf(1, 'an error occured with reshape \n')
         numel(palette(1).samples)
         size(palette(ii).samples')
+        error('an error occured with reshape')
     end
     
     cd(tmpPwd)
