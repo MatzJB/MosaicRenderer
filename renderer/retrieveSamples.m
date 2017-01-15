@@ -3,6 +3,8 @@
 %todo: use number of total samples as a measurement instead, in the case
 %that the mosaees are elongated
 %todo: clean up this code
+%return indices once and reuse them for all samples (ind2sub)
+
 function [samples, coordinates] = retrieveSamples(img, nSamples)
 [y_dim,x_dim,~] = size(img);
 
@@ -10,7 +12,7 @@ function [samples, coordinates] = retrieveSamples(img, nSamples)
 
 yc = linspace(1, y_dim, nSamples);
 xc = linspace(1, x_dim, nSamples);
-samples=zeros(nSamples^2, 3);
+samples = zeros(nSamples^2, 3);
 
 coordinates = zeros(nSamples^2, 2);
 

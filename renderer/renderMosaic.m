@@ -21,6 +21,7 @@ warning('off', 'images:initSize:adjustingMag');
 mosaic = [];
 mosaicIndexed = [];
 palette = moselStruct.palette;
+nShades = moselStruct.nShades;
 
 tmp = size( palette(1).samples ); % must match samples
 nSamples = sqrt( tmp(1) );
@@ -56,12 +57,14 @@ end
 try
     mosaee = imread(mosaicName);
 catch Exception
+    
     fprintf(1, 'Couldn''t find image file ''%s''\n', mosaicName);
-    return
+    %return
 end
 
-[r, c, d] = size(mosaee); % the image to be 'mosaiced'
-if d==1, mosaee = cat(3, mosaee, mosaee, mosaee); end % support gray image
+[mosaee, map] = rgb2ind(mosaee, nShades);
+[r, c] = size(mosaee); % the image to be 'mosaiced'
+%if d==1, mosaee = cat(3, mosaee, mosaee, mosaee); end % support gray image
 ratio = c/r; % we use the ratio of the mosaic image when we create the mosels
 
 % specify the height of resulting mosaic (pixels)
@@ -90,12 +93,15 @@ mosaicMean = mosaic; % each mosic is the average color of the samples (for compa
 
 if const.render
     figure
-    h = imshow(mosaic/255.0);
+    h = imshow(mosaic, map);
     title('Mosaic (render)')
     drawnow
     set(gcf, 'renderer', 'opengl')
     hold on
 end
+
+
+[sampleIndices,coords] = getSamplePattern(mosDim, nSamples);
 
 ii = 0;
 jj = 0;
@@ -110,6 +116,7 @@ for y = 1:mosDim(1):rMosaic - mosDim(1)
         try
             tmpTile = retrieveTile(imMosaic, [y, x], [mosDim(1), mosDim(2)]);
         catch Exception
+            rethrow(Exception)
             fprintf(1, 'Found errors: (x, y) = (%d, %d)\n', x, y);
         end
         
@@ -117,7 +124,9 @@ for y = 1:mosDim(1):rMosaic - mosDim(1)
             line([x, x+mosDim(2), x+mosDim(2), x, x], [y, y, y+mosDim(1), y+mosDim(1), y], 'color', 'r')
         end
         
-        [sourceSamples, ~] = retrieveSamples(tmpTile, nSamples);
+        %[sourceSamples, ~] = retrieveSamples(tmpTile, nSamples);
+        sourceSamples = tmpTile(sampleIndices);
+        
         
         if const.speedup
             if const.nocolors
@@ -166,11 +175,11 @@ for y = 1:mosDim(1):rMosaic - mosDim(1)
         tmpMean = palette(iBest).mean;
         %todo: clean up
         mosaicMean(yStart*mosDim(1)+1:(yStart+1)*mosDim(1), xStart*mosDim(2)+1:(xStart+1)*mosDim(2), 1) = tmpMean(1);
-        mosaicMean(yStart*mosDim(1)+1:(yStart+1)*mosDim(1), xStart*mosDim(2)+1:(xStart+1)*mosDim(2), 2) = tmpMean(2);
-        mosaicMean(yStart*mosDim(1)+1:(yStart+1)*mosDim(1), xStart*mosDim(2)+1:(xStart+1)*mosDim(2), 3) = tmpMean(3);
+        %mosaicMean(yStart*mosDim(1)+1:(yStart+1)*mosDim(1), xStart*mosDim(2)+1:(xStart+1)*mosDim(2), 2) = tmpMean(2);
+        %mosaicMean(yStart*mosDim(1)+1:(yStart+1)*mosDim(1), xStart*mosDim(2)+1:(xStart+1)*mosDim(2), 3) = tmpMean(3);
         
         try
-            mosaic(yStart*mosDim(1)+1:(yStart+1)*mosDim(1), xStart*mosDim(2)+1:(xStart+1)*mosDim(2), :) = tmp;
+            mosaic(yStart*mosDim(1)+1:(yStart+1)*mosDim(1), xStart*mosDim(2)+1:(xStart+1)*mosDim(2)) = tmp;
         catch exception
             size(tmp)
             warning('Possible solution: reinit palette')
@@ -199,7 +208,7 @@ for y = 1:mosDim(1):rMosaic - mosDim(1)
 end
 
 if const.render
-    mosaic = mosaic/255;
+    mosaic = mosaic;
     set(h, 'cdata', mosaic)
     drawnow
 end

@@ -15,9 +15,6 @@
 %       from a move) (default:1)
 %       blurSigma - gaussian blur sigma
 %       nProfrs - number of progress printouts (default:10)
-
-% todo: add option to control printouts
-% todo: support really skipping mosels
 function [moselStruct] = collectMosaicData(mosaicSize, moselsDir, varargin)
 
 constants = {};
@@ -47,63 +44,55 @@ end
 if constants.debug
     fprintf(1, 'skip: %d\n', constants.skipMosel);
 end
+
+nShades = 5000; %used by RGB2index
+
 % Larger mosels require filtering to provide nice samples
 mosaicSize  = round(mosaicSize);
 % mosic element number of rows and columns (pixels)
 rMosel   = mosaicSize(1);
 cMosel   = mosaicSize(2);
-ratMosel = cMosel/rMosel; %ratio
-
-%todo: add HD mosel data handling
-rMoselHD = 400; %experimental
-cMoselHD = round(rMoselHD*ratMosel);
 
 if constants.nSamples > rMosel || constants.nSamples > cMosel
     warning('Number of samples is larger than resolution of mosel')
 end
 
-% todo: remove speedup option
-speedup    = 1; % optimized code
+speedup = 1; % optimized code
 
 if constants.debug
     fprintf(1, 'Creating palette from %s...\n', pwd);
 end
 
-tmpPwd     = pwd;
+tmpPwd = pwd;
 
 %todo: we might wish to simply supply path to moselsDir instead of moving there
 cd(moselsDir)
 imagefiles = dir('*');
-nFiles     = length(imagefiles);
+nFiles = length(imagefiles);
 if constants.debug
     fprintf(1, 'Reading, cropping and sampling %d mosels...\n', nFiles);
 end
 
 progPerc = linspace(0, 100, constants.nPrgrs);
+iPrgs = 1;
 
-iPrgs   = 1;
-
-%todo: (otimization) bypass if no blurring is used
 if constants.blurMosels
     blurKernel = single( fspecial('gaussian', [rMosel, cMosel], constants.blurSigma) );
-else % bypassing blurring
-    blurKernel = zeros(rMosel, cMosel);
-    blurKernel(ceil(end*0.5), floor(end*0.5)+1) = 1;
 end
 
 debugRun = false; %flag to discern if we run debug print
-
 range = 3:constants.skipMosel:nFiles;
 
 nElement = numel(range);
 for index=1:nElement
-    palette(index).data = zeros(rMosel, cMosel, 3);
+    palette(index).data = zeros(rMosel, cMosel);
 end
 
+[sampleIndices,coords] = getSamplePattern(mosaicSize, constants.nSamples);
+
 index = 1;
-nSamplesTotal = 3*constants.nSamples^2; %Note: grid*RGB
 tPalette = tic;
-for ii = 3:constants.skipMosel:nFiles % skip . and ..
+for ii = range%3:constants.skipMosel:nFiles % skip . and ..
     imname = imagefiles(ii).name;
     [~, ~, ext] = fileparts(imname);
     if ~strcmp(ext, '.jpeg') && ~strcmp(ext, '.jpg')
@@ -111,11 +100,7 @@ for ii = 3:constants.skipMosel:nFiles % skip . and ..
     end
     
     im = imread(imname);
-    if constants.debug && size(im,3)~=3 %we only accept RGB images
-        fprintf(1, 'image %s not RGB, skipping\n', imname);
-        continue
-    end
-    
+    [im, map] = rgb2ind(im, nShades); %convert to indexed image, for faster render
     imTmp = rescaleAndCrop(im, [rMosel, cMosel]); % scale image so we can see
     palette(index).name = imname;
     
@@ -124,13 +109,15 @@ for ii = 3:constants.skipMosel:nFiles % skip . and ..
         imTmp = applyBlurFilter(single(imTmp), blurKernel);
     end
     
-    [tmpSamples, coords] = retrieveSamples(imTmp, constants.nSamples);
+    %[tmpSamples, coords] = retrieveSamples(imTmp, constants.nSamples);
+    tmpSamples = imTmp(sampleIndices);
     palette(index).samples = tmpSamples;
     %tmp = rgb2gray(reshape(tmpSamples(:), nSamplesTotal/3, 3));
     %tmp = rgb2gray(tmpSamples);
-    tmp = 255*rgb2gray(reshape(tmpSamples(:)/255, nSamplesTotal/3, 3));
+    %fprintf(1,'samples:%d\n\n----', tmpSamples);
+    %tmp = 255*ind2gray(tmpSamples(:)/255);
     
-    palette(index).samplesBW = tmp;
+    palette(index).samplesBW = tmpSamples; %change
     palette(index).data = imTmp; % the image
     palette(index).mean = mean(tmpSamples); % used for histogram etc.
     
@@ -172,7 +159,7 @@ sampleSpaceBW = zeros(M, N); %matrix of all samples (M-by-N) m mosels with N sam
 % Pack all samples into vectors in N^n space and search mosels using dsearchn
 if speedup
     try
-        for ii = 1:M
+        for ii = 1:M %todo tidy up
             sampleSpace(ii, :) = reshape(palette(ii).samples', 1, numel(palette(1).samples));
             sampleSpaceBW(ii, :) = reshape(palette(ii).samplesBW', 1, numel(palette(1).samplesBW));
         end
@@ -185,9 +172,10 @@ if speedup
     cd(tmpPwd)
 end
 
-moselStruct.ver = 0.1;
+moselStruct.nShades = nShades;
+moselStruct.ver = 0.2;
 moselStruct.palette = palette;
+moselStruct.map = map;
 % for use with dsearchn
 moselStruct.sampleSpace = sampleSpace;
 moselStruct.sampleSpaceBW = sampleSpaceBW;
-% todo: remove sample from mosaics and only use sampleSpace

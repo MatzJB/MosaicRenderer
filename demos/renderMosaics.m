@@ -5,6 +5,7 @@
 constants %load constants used by this script
 
 reInit = true; % we wish to re-calculate the mosaic elements
+curMosaicVer = 0.2;
 
 if moselsDir(end) == filesep, moselsDir = moselsDir(1:end-1); end
 
@@ -13,7 +14,7 @@ moselProjectname = moselProjectname(end);
 moselProjectname = moselProjectname{1};
 
 imagefiles = dir([mosaicDir, filesep, '*.jpg']);
-nFiles     = length(imagefiles);
+nFiles = length(imagefiles);
 
 fprintf(1, 'mosel project name: %s\n', moselProjectname);
 fprintf(1, 'Reading files to mosaic from %s...\n', mosaicDir);
@@ -28,10 +29,10 @@ end
 if reInit
     settingsStr = ['r=', num2str(r), ' nSamples=', num2str(collectConst.nSamples), ' skip=', num2str(collectConst.skipMosel)];
     moselStruct = collectMosaicData([r,c], moselsDir, collectConst);
-    save([mosaicPaletteDir, filesep, 'Mosaic Data -', moselProjectname, '- ', settingsStr, '.mat'], 'moselStruct');
+    save([mosaicPaletteDir, filesep, 'Mosaic Data ver=', num2str(curMosaicVer), ' -', moselProjectname, '- ', settingsStr, '.mat'], 'moselStruct');
 else % load precalculated sample and palette file
     try
-        mosaicDataFiles  = dir([outputDir, filesep, 'Mosaic Data*']);
+        mosaicDataFiles  = dir([outputDir, filesep, 'Mosaic Data ver=', num2str(curMosaicVer)', '*']);
         nFiles = length(mosaicDataFiles);
         
         if nFiles>1
@@ -64,20 +65,23 @@ for iMosaic = 1:length(mosaicNames)
     fprintf(1, 'mosaic number %d of %d\n', iMosaic, length(mosaicNames));
     close all
     mosaicName = mosaicNames{iMosaic};
-    fprintf(1, 'render...%s\n', mosaicName);
+    
     %todo: add try/catch if file was erased during render
     try
+        fprintf(1, 'render...%s\n', mosaicName);
         [mosaic, mosInds, mosMean] = renderMosaic(renderHeight, moselStruct, mosaicName, renderConst);
     catch Exception
-        warning(['File', mosaicName,'was not found'])
+        %warning(['File ', mosaicName,' was not found'])
+        continue
     end
     
+    ext = 'jpg';
     [pathStr, name, ext] = fileparts(mosaicName);
-    outFilename = [outputDir, filesep, name, '_mosaic', '.png'];
+    outFilename = [outputDir, filesep, name, '_mosaic.', ext];
     mosaicIndexedName = [outputDir, filesep, name, '_ind.mat'];
-    mosaicMeanName = [outputDir, filesep, name, '_mean.png'];
-    imwrite(mosaic, outFilename, 'png')
-    imwrite(mosMean/255, mosaicMeanName, 'png')
+    mosaicMeanName = [outputDir, filesep, name, '_mean.', ext];
+    imwrite(mosaic, moselStruct.map, outFilename)
+    imwrite(mosMean/255, mosaicMeanName)
     save(mosaicIndexedName, 'mosInds');
     fprintf(1, 'Saved %s\n\n', outFilename);
 end
