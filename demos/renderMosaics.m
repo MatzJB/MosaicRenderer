@@ -66,8 +66,11 @@ for iMosaic = 1:length(mosaicNames)
     mosaicName = mosaicNames{iMosaic};
     fprintf(1, 'render...%s\n', mosaicName);
     %todo: add try/catch if file was erased during render
-    
-    [mosaic, mosInds, mosMean] = renderMosaic(renderHeight, moselStruct, mosaicName, renderConst);
+    try
+        [mosaic, mosInds, mosMean] = renderMosaic(renderHeight, moselStruct, mosaicName, renderConst);
+    catch Exception
+        warning(['File', mosaicName,'was not found'])
+    end
     
     [pathStr, name, ext] = fileparts(mosaicName);
     outFilename = [outputDir, filesep, name, '_mosaic', '.png'];
