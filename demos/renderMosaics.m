@@ -4,7 +4,7 @@
 
 constants %load constants used by this script
 
-reInit = true; % we wish to re-calculate the mosaic elements
+reInit = false; % we wish to re-calculate the mosaic elements
 
 if moselsDir(end) == filesep, moselsDir = moselsDir(1:end-1); end
 
@@ -12,71 +12,62 @@ moselProjectname = strsplit(moselsDir, filesep);
 moselProjectname = moselProjectname(end);
 moselProjectname = moselProjectname{1};
 
-imagefiles = dir([mosaicDir,filesep, '*.jpg']);
+imagefiles = dir([mosaicDir, filesep, '*.jpg']);
 nFiles     = length(imagefiles);
 
-fprintf(1, 'mosel project name %s\n', moselProjectname);
+fprintf(1, 'mosel project name: %s\n', moselProjectname);
 fprintf(1, 'Reading files to mosaic from %s...\n', mosaicDir);
 fprintf(1, 'Found %d image(s)\n', nFiles);
 
 mosaicNames{nFiles} = 0;
-for ii = 1:nFiles
-    imname = [mosaicDir,filesep,imagefiles(ii).name];
-    mosaicNames{end+1} = imname;
+for iFile = 1:nFiles
+    imname = [mosaicDir,filesep,imagefiles(iFile).name];
+    mosaicNames{iFile} = imname;
 end
 
 if reInit
-    [palette, samples] = collectMosaicData([r,c], moselsDir, collectConst);
-    settingsStr = ['r=', num2str(r), ' nSamples=', num2str(collectConst.nSamples)];
-
-    save([mosaicPaletteDir, filesep, 'palette - ', moselProjectname, ' - ', settingsStr, '.mat'], 'palette');
-    save([mosaicPaletteDir, filesep, 'samples - ', moselProjectname, ' - ', settingsStr, '.mat'], 'samples');
+    settingsStr = ['r=', num2str(r), ' nSamples=', num2str(collectConst.nSamples), ' skip=', num2str(collectConst.skipMosel)];
+    moselStruct = collectMosaicData([r,c], moselsDir, collectConst);
+    save([mosaicPaletteDir, filesep, 'Mosaic Data -', moselProjectname, '- ', settingsStr, '.mat'], 'moselStruct');
 else % load precalculated sample and palette file
     try
-        sampleFiles  = dir([outputDir, filesep, 'samples*']);
-        paletteFiles = dir([outputDir, filesep, 'palette*']);
-        n = length(sampleFiles);
+        mosaicDataFiles  = dir([outputDir, filesep, 'Mosaic Data*']);
+        nFiles = length(mosaicDataFiles);
         
-        if n>1
+        if nFiles>1
             fprintf(1, 'More than one sample file was found. Please choose the one to load from the list below...\n');
-            for ii = 1:n, fprintf(1, '(%d) %s\n', ii, sampleFiles(ii).name); end
+            for iFile = 1:nFiles, fprintf(1, '(%d) %s\n', iFile, mosaicDataFiles(iFile).name); end
             
-            id = n+1;
-            while id>n || id<1, id = input('Select: '); end
+            id = nFiles+1;
+            while id>nFiles || id<1, id = input('Select: '); end
             
-            sampleFile  = sampleFiles(id).name;
-            paletteFile = paletteFiles(id).name;
-        elseif n==0
+            dataFilename = mosaicDataFiles(id).name;
+        elseif nFiles==0
             error('could not find any samplefiles')
         else %n==1
-            sampleFile  = sampleFiles.name;
-            paletteFile = paletteFiles.name;
+            dataFilename = mosaicDataFiles.name;
         end
         
-        sampleFile = [outputDir,filesep,sampleFile];
-        paletteFile = [outputDir,filesep,paletteFile];
-        fprintf(1, ' palette file >> %s\n', paletteFile);
-        fprintf(1, ' sample file >> %s\n', sampleFile);
-        load(paletteFile, 'palette');
-        load(sampleFile, 'samples');
+        dataFilename = [outputDir, filesep, dataFilename];
+        fprintf(1, ' mosaic data file >> %s\n', dataFilename);
+        load(dataFilename, 'moselStruct');
     catch Exception
-        fprintf(1, 'loading palette and samples did not succeed.\n');
+        fprintf(1, 'loading mosaic data did not succeed.\n');
         rethrow(Exception)
     end
 end
 
-if numel(palette)==0, error('palette file is empty'), end
-if numel(samples)==0, error('samples was empty'), end
+if numel(moselStruct)==0, error('mosaic data file is empty'), end
 
 tTotal = tic;
-for i = 1:length(mosaicNames)
-    fprintf(1, 'mosaic number %d of %d\n', i, length(mosaicNames));
+for iMosaic = 1:length(mosaicNames)
+    fprintf(1, 'mosaic number %d of %d\n', iMosaic, length(mosaicNames));
     close all
-    mosaicName = mosaicNames{i};
+    mosaicName = mosaicNames{iMosaic};
     fprintf(1, 'render...%s\n', mosaicName);
     %todo: add try/catch if file was erased during render
     
-    [mosaic, mosInds, mosMean] = renderMosaic(renderHeight, palette, samples, mosaicName, renderConst);
+    [mosaic, mosInds, mosMean] = renderMosaic(renderHeight, moselStruct, mosaicName, renderConst);
     
     [pathStr, name, ext] = fileparts(mosaicName);
     outFilename = [outputDir, filesep, name, '_mosaic', '.png'];

@@ -1,10 +1,10 @@
 %renderMosaic(rMosaic, image_palette, sample_space, mosaicName, [constants])
-%  
+%
 %  renderMosaic renders a given image <mosaicName> at a specified height
 %  <rMosaic> (in pixels). The mosaic elements used must be calculated by
 %  collectMosaicData (resulting in <image_palette>, <sample_space>).
 %
-%  Optional arguments: cell of constants containing elements: 
+%  Optional arguments: cell of constants containing elements:
 %       plot     - unused
 %       stats    - printing statistics while rendering (default: false)
 %       debug    - showing debug prints and lines in render (default: false)
@@ -15,17 +15,19 @@
 %       the render (default: 10)
 
 
-function [mosaic, mosaicIndexed, mosaicMean] = renderMosaic(rMosaic, palette, sample_space, mosaicName, varargin)
+function [mosaic, mosaicIndexed, mosaicMean] = renderMosaic(rMosaic, moselStruct, mosaicName, varargin)
 
 warning('off', 'images:initSize:adjustingMag');
 
 mosaic = [];
 mosaicIndexed = [];
+palette = moselStruct.palette;
 
 tmp          = size( palette(1).samples ); % must match samples
 nSamples     = sqrt(tmp(1));
 
 const = {};
+%default constants:
 const.plot   = false;
 const.render = true;
 const.stats   = true;
@@ -34,24 +36,22 @@ const.speedup  = true;
 const.nocolors  = false; %if true then ignore colors
 const.nPrgrs = 10;
 
-if nargin==5 % override defaults with constants
+if nargin==4 % override defaults with constants
     try
-        argconst       = varargin{1};
-        const.plot   = argconst.plot;
+        argconst = varargin{1};
+        const.plot = argconst.plot;
         const.render = argconst.render;
         const.stats  = argconst.stats;
-        const.debug  = argconst.debug;
-        const.nocolors  = argconst.nocolors;
+        const.debug = argconst.debug;
+        const.nocolors = argconst.nocolors;
+        const.speedup = argconst.speedup;
     catch
-        %error('all optional variables has to be defined')
+        warning('some variables were not defined by optional argument')
     end
 end
 
-if const.nocolors
-    fprintf(1, 'converting samples to grayscale...\n');
-    %vector containing [R,G,B,R,G,B,...]
-
-palette = paletteToGray(palette);
+if const.stats
+fprintf(1,'speedup: %d\n', const.speedup);
 end
 
 try
@@ -62,8 +62,8 @@ catch Exception
 end
 
 [r, c, d] = size(mosaee); % the image to be 'mosaiced'
- 
-% gray image
+
+% support gray image
 if d==1, mosaee = cat(3, mosaee, mosaee, mosaee); end
 
 ratio = c/r;
@@ -94,24 +94,25 @@ mosaic = single(imMosaic);
 mosaicMean = mosaic; % each mosic is the average color of the samples (for comparison)
 
 figure;
-h = imshow(mosaic/255);
+h = imshow(mosaic/255.0);
 title('Mosaic (render)')
 drawnow
 
 set(gcf, 'renderer', 'opengl')
 ii = 0;
+jj = 0;
 %tt = 0; % used for controlling printouts
 hold on
 
 tRender = tic;
 for y = 1:mosDim(1):rMosaic - mosDim(1)
-    for x = 1:mosDim(2):cMosaic - mosDim(2) % c_mosaic-c_step
+    for x = 1:mosDim(2):cMosaic - mosDim(2)
         % used to place samples in mosaic
         yStart = round( y/mosDim(1) );
         xStart = round( x/mosDim(2) );
-        % source_samples = retrieveSamples(im_mosaic(y:y + r_step, x:x + c_step, :), n_samples);
+        
         try
-            tmp_tile = retrieveTile(imMosaic, [y, x], [mosDim(1), mosDim(2)]);
+            tmpTile = retrieveTile(imMosaic, [y, x], [mosDim(1), mosDim(2)]);
         catch Exception
             fprintf(1, 'Found errors: (x, y) = (%d, %d)\n', x, y);
         end
@@ -120,31 +121,41 @@ for y = 1:mosDim(1):rMosaic - mosDim(1)
             line([x, x+mosDim(2), x+mosDim(2), x, x], [y, y, y+mosDim(1), y+mosDim(1), y], 'color', 'r')
         end
         
-        [source_samples, ~] = retrieveSamples(tmp_tile, nSamples);
+        [sourceSamples, ~] = retrieveSamples(tmpTile, nSamples);
         
         if const.speedup
-            source_vector = reshape(source_samples', 1, numel(source_samples));
-            i_best = dsearchn(sample_space, source_vector);
+            if const.nocolors
+                sampleSpace = moselStruct.sampleSpaceBW;
+            else
+                sampleSpace = moselStruct.sampleSpace;
+            end
+                        
+            sourceVector = reshape(sourceSamples', 1, numel(sourceSamples));
+            iBest = dsearchn(sampleSpace, sourceVector);
         else
             dist_best = Inf;
-            i_best = 1;
+            iBest = 1;
             % find the closest color in the palette
             if length(palette)==1
                 error('Palette only has one mosel.')
             end
             
-            for i = 1:length(palette)
-                % im_tmp = image_palette(i).data;
-                cand_samples = palette(i).samples;
+            for index = 1:length(palette)
+                if const.nocolors
+                    candSamples = palette(index).samplesBW;
+                else
+                    candSamples = palette(index).samples;
+                end
+                
                 dist = 0;
-                for j = 1:size(source_samples, 1)
-                    dist = dist + ( tone_distance(source_samples(j, :), cand_samples(j, :)) );
+                for j = 1:size(sourceSamples, 1)
+                    dist = dist + toneDistance(sourceSamples(j, :), candSamples(j, :));
                 end
                 
                 % pick this one if the distances are small
                 if dist < dist_best
                     dist_best = dist;
-                    i_best    = i;
+                    iBest    = index;
                 end
             end
         end
@@ -152,16 +163,16 @@ for y = 1:mosDim(1):rMosaic - mosDim(1)
         %Place in mosaic matrix in steps of r_mosel and c_mosel
         %for each y that is scanned r_step at a time, we need to place a mosel in
         %that position
-        tmp = palette(i_best).data;
+        tmp = palette(iBest).data;
         iIndex = ceil(y/mosDim(1));
         jIndex = ceil(x/mosDim(2));
-        mosaicIndexed(iIndex, jIndex) = i_best;
-        tmpMean = palette(i_best).mean;
+        mosaicIndexed(iIndex, jIndex) = iBest;
+        tmpMean = palette(iBest).mean;
         %todo: clean up
         mosaicMean(yStart*mosDim(1)+1:(yStart+1)*mosDim(1), xStart*mosDim(2)+1:(xStart+1)*mosDim(2), 1) = tmpMean(1);
         mosaicMean(yStart*mosDim(1)+1:(yStart+1)*mosDim(1), xStart*mosDim(2)+1:(xStart+1)*mosDim(2), 2) = tmpMean(2);
         mosaicMean(yStart*mosDim(1)+1:(yStart+1)*mosDim(1), xStart*mosDim(2)+1:(xStart+1)*mosDim(2), 3) = tmpMean(3);
-                
+        
         try
             mosaic(yStart*mosDim(1)+1:(yStart+1)*mosDim(1), xStart*mosDim(2)+1:(xStart+1)*mosDim(2), :) = tmp;
         catch exception
@@ -172,19 +183,20 @@ for y = 1:mosDim(1):rMosaic - mosDim(1)
         ii = ii + 1;
     end
     
-    % very slow
-    if const.render
-        set(h, 'cdata', mosaic/255)
-        drawnow
-    end
-    
+    jj = jj + 1;
     average_time = toc(tRender)/ii;
     
-    %todo: check this
+    if mod(jj, 7)==0 % Warning: very slow
+        if const.render
+            set(h, 'cdata', mosaic/255)
+            drawnow
+        end
+    end
+    
+    % todo: check this
     if const.stats && mod(ii, round( mosDim(1)/const.nPrgrs ))==1
         %if const.stats && mod(tt, 15) == 0
         fprintf(1, 'Average speed: %d s/mosel\n', average_time);
-        %fprintf(1, 'Finished: %d%%\n', ceil(100*y/(r_mosaic-r_step)))
         toc(tRender)
         fprintf(1, '  Finished: %d%%\n', ceil(100*y/(rMosaic-mosDim(1))));
         ETA = max(1, floor(average_time*(rMosaic/mosDim(1)*cMosaic/mosDim(2) - ii)));
@@ -192,31 +204,13 @@ for y = 1:mosDim(1):rMosaic - mosDim(1)
     end
 end
 
+
 if const.render
-    set(h, 'cdata', mosaic/255)
+    mosaic = mosaic/255;
+    set(h, 'cdata', mosaic)
     drawnow
+    pause(1)
 end
 
 toc(tRender)
-mosaic = mosaic/255; %normalize result
 
-%todo: for debugging, will be introduced later, probably
-%{
-
-  else %solid mosels at each sample
-                
-                %source_samples = retrieve_samples(retrieve_tile(im_mosaic, [y, x], [r_step, c_step]), n_samples);
-                tmp = 0*image_palette(1).data;
-                
-                for gg = 1:length(source_samples)
-                    tmp(source_coords(gg, 1), source_coords(gg, 2), :) = [255, 0, 0]; %source_samples(gg,:);
-                end
-                
-                tmp(1, 1, 2) = 255; %corner
-                tmp(end, end, 3)=255; %corner
-                
-                mosaic(yStart*mosDim(1)+1:(yStart+1)*mosDim(1)+1, xStart*mosDim(2)+1:(xStart+1)*mosDim(2)+1, :) = tmp;
-                %mosaic(y_start*r_mosel+1:(y_start+1)*r_mosel, x_start*c_mosel+1:(x_start+1)*c_mosel, :) = tmp;
-                %set(h, 'cdata', im_mosaic)
-            end %solid_mosels
-%}
