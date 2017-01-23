@@ -9,8 +9,8 @@
 %       stats    - printing statistics while rendering (default: false)
 %       debug    - showing debug prints and lines in render (default: false)
 %       speedup  - using speedier code. (default: true)
-%       nocolors - the renderer ignores colors for all samples and mosaees
-%       (default: false)
+%       useColors - when false, renderer ignores colors for all samples and mosaees
+%       (default: true)
 %       nPrgrs   - number of progress printouts used during the course of
 %       the render (default: 10)
 
@@ -21,9 +21,7 @@ warning('off', 'images:initSize:adjustingMag');
 mosaic = [];
 mosaicIndexed = [];
 palette = moselStruct.palette;
-
-tmp = size( palette(1).samples ); % must match samples
-nSamples = sqrt( tmp(1) );
+nSamples = moselStruct.nSamples;
 
 %default constants:
 const = {};
@@ -32,7 +30,7 @@ const.render = true;
 const.stats = true;
 const.debug = false;
 const.speedup = true;
-const.nocolors = false; %if true then ignore colors
+const.useColors = false;
 const.nPrgrs = 10;
 
 if nargin==4 % override defaults with constants
@@ -42,7 +40,7 @@ if nargin==4 % override defaults with constants
         const.render = argconst.render;
         const.stats  = argconst.stats;
         const.debug = argconst.debug;
-        const.nocolors = argconst.nocolors;
+        const.useColors = argconst.useColors;
         const.speedup = argconst.speedup;
     catch
         warning('some variables were not defined by optional argument')
@@ -83,7 +81,6 @@ end
 % todo: clean up
 mosaicSize(1) = ceil(r/mosDim(1)) * mosDim(1);
 mosaicSize(2) = ceil(c/mosDim(2)) * mosDim(2);
-
 imMosaic = single(imMosaic);
 mosaic = single(imMosaic);
 mosaicMean = mosaic; % each mosic is the average color of the samples (for comparison)
@@ -100,27 +97,28 @@ end
 ii = 0;
 jj = 0;
 
+% pick out B/W and RGB samples patterns
+[inds, coordinates] = getSamplePattern(mosDim, nSamples);
+indsRGB = []; for i=0:2; indsRGB = [indsRGB, inds+mosDim(1)*mosDim(2)*i]; end
+indsBW = inds;
+
 tRender = tic;
 for y = 1:mosDim(1):rMosaic - mosDim(1)
     for x = 1:mosDim(2):cMosaic - mosDim(2)
         % used to place samples in mosaic
         yStart = round( y/mosDim(1) );
         xStart = round( x/mosDim(2) );
-        
-        try
-            tmpTile = retrieveTile(imMosaic, [y, x], [mosDim(1), mosDim(2)]);
-        catch Exception
-            fprintf(1, 'Found errors: (x, y) = (%d, %d)\n', x, y);
-        end
+        tmpTile = retrieveTile(imMosaic, [y, x], [mosDim(1), mosDim(2)]);
         
         if const.debug
-            line([x, x+mosDim(2), x+mosDim(2), x, x], [y, y, y+mosDim(1), y+mosDim(1), y], 'color', 'r')
+            line([x, x+mosDim(2), x+mosDim(2), x, x], [y, y, y+mosDim(1),...
+                y+mosDim(1), y], 'color', 'r')
         end
         
-        [sourceSamples, ~] = retrieveSamples(tmpTile, nSamples);
+        sourceSamples = tmpTile(indsRGB);
         
         if const.speedup
-            if const.nocolors
+            if const.useColors
                 sampleSpace = moselStruct.sampleSpaceBW;
             else
                 sampleSpace = moselStruct.sampleSpace;
@@ -137,7 +135,7 @@ for y = 1:mosDim(1):rMosaic - mosDim(1)
             end
             
             for index = 1:length(palette)
-                if const.nocolors
+                if const.useColors
                     candSamples = palette(index).samplesBW;
                 else
                     candSamples = palette(index).samples;
@@ -145,7 +143,8 @@ for y = 1:mosDim(1):rMosaic - mosDim(1)
                 
                 dist = 0;
                 for j = 1:size(sourceSamples, 1)
-                    dist = dist + toneDistance(sourceSamples(j, :), candSamples(j, :));
+                    dist = dist + toneDistance(sourceSamples(j, :), ...
+                        candSamples(j, :));
                 end
                 
                 % pick this one if the distances are small
@@ -164,7 +163,7 @@ for y = 1:mosDim(1):rMosaic - mosDim(1)
         jIndex = ceil(x/mosDim(2));
         mosaicIndexed(iIndex, jIndex) = iBest;
         tmpMean = palette(iBest).mean;
-        %todo: clean up
+        
         mosaicMean(yStart*mosDim(1)+1:(yStart+1)*mosDim(1), xStart*mosDim(2)+1:(xStart+1)*mosDim(2), 1) = tmpMean(1);
         mosaicMean(yStart*mosDim(1)+1:(yStart+1)*mosDim(1), xStart*mosDim(2)+1:(xStart+1)*mosDim(2), 2) = tmpMean(2);
         mosaicMean(yStart*mosDim(1)+1:(yStart+1)*mosDim(1), xStart*mosDim(2)+1:(xStart+1)*mosDim(2), 3) = tmpMean(3);
@@ -180,7 +179,7 @@ for y = 1:mosDim(1):rMosaic - mosDim(1)
     end
     
     jj = jj + 1;
-    average_time = toc(tRender)/ii;
+    averageTime = toc(tRender)/ii;
     
     if mod(jj, 7)==0 % Warning: very slow
         if const.render
@@ -190,10 +189,10 @@ for y = 1:mosDim(1):rMosaic - mosDim(1)
     end
     
     if const.stats && mod(ii, round( mosDim(1)/const.nPrgrs ))==1
-        fprintf(1, 'Average speed: %d s/mosel\n', average_time);
+        fprintf(1, 'Average speed: %d s/mosel\n', averageTime);
         toc(tRender)
         fprintf(1, '  Finished: %d%%\n', ceil(100*y/(rMosaic-mosDim(1))));
-        ETA = max(1, floor(average_time*(rMosaic/mosDim(1)*cMosaic/mosDim(2) - ii)));
+        ETA = max(1, floor(averageTime*(rMosaic/mosDim(1)*cMosaic/mosDim(2) - ii)));
         fprintf(1, 'ETA: %d s\n', ETA);
     end
 end
@@ -204,5 +203,11 @@ if const.render
     drawnow
 end
 
-toc(tRender)
+% statistics of render routine
+if const.stats
+    averageTime = toc(tRender) / (numel(sourceSamples) * numel(mosaicIndexed));
+    fprintf(1, '\n\n average time per sample:%f\n\n', averageTime);
+end
+    
+    toc(tRender)
 

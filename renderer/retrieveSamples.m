@@ -6,12 +6,9 @@
 function [samples, coordinates] = retrieveSamples(img, nSamples)
 [y_dim,x_dim,~] = size(img);
 
-%todo: remove black borders after filtering
-
 yc = linspace(1, y_dim, nSamples);
 xc = linspace(1, x_dim, nSamples);
-samples=zeros(nSamples^2, 3);
-
+samples = zeros(nSamples^2, 3);
 coordinates = zeros(nSamples^2, 2);
 
 i_sample = 1;

@@ -3,8 +3,7 @@
 %}
 
 constants %load constants used by this script
-
-reInit = true; % we wish to re-calculate the mosaic elements
+moselVer = 0.3; %current supported version
 
 if moselsDir(end) == filesep, moselsDir = moselsDir(1:end-1); end
 
@@ -26,12 +25,16 @@ for iFile = 1:nFiles
 end
 
 if reInit
-    settingsStr = ['r=', num2str(r), ' nSamples=', num2str(collectConst.nSamples), ' skip=', num2str(collectConst.skipMosel)];
-    moselStruct = collectMosaicData([r,c], moselsDir, collectConst);
-    save([mosaicPaletteDir, filesep, 'Mosaic Data -', moselProjectname, '- ', settingsStr, '.mat'], 'moselStruct');
+    settingsStr = ['r=', num2str(r),...
+                   ' nSamples=', num2str(collectConst.nSamples),...
+                   ' skip=', num2str(collectConst.skipMosel)];
+    moselStruct = collectMosaicData([r, c], moselsDir, collectConst);
+    save([mosaicPaletteDir, filesep, 'Mosaic Data ver=', moselVer,...
+        ' ', moselProjectname, '- ', settingsStr, '.mat'], 'moselStruct');
 else % load precalculated sample and palette file
     try
-        mosaicDataFiles  = dir([outputDir, filesep, 'Mosaic Data*']);
+        % load matching version
+        mosaicDataFiles  = dir([outputDir, filesep, 'Mosaic Data ver=', moselVer, '*']);
         nFiles = length(mosaicDataFiles);
         
         if nFiles>1
@@ -43,7 +46,7 @@ else % load precalculated sample and palette file
             
             dataFilename = mosaicDataFiles(id).name;
         elseif nFiles==0
-            error('could not find any samplefiles')
+            error('could not find any moselStruct files')
         else %n==1
             dataFilename = mosaicDataFiles.name;
         end
@@ -65,11 +68,12 @@ for iMosaic = 1:length(mosaicNames)
     close all
     mosaicName = mosaicNames{iMosaic};
     fprintf(1, 'render...%s\n', mosaicName);
-    %todo: add try/catch if file was erased during render
+
     try
         [mosaic, mosInds, mosMean] = renderMosaic(renderHeight, moselStruct, mosaicName, renderConst);
     catch Exception
-        warning(['File', mosaicName,'was not found'])
+        warning(['rendering ', mosaicName,' was not successful'])
+        rethrow(Exception)
     end
     
     [pathStr, name, ext] = fileparts(mosaicName);
