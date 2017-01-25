@@ -47,6 +47,8 @@ if nargin==4 % override defaults with constants
     end
 end
 
+const.useColors
+
 if const.stats
     fprintf(1, 'speedup: %d\n', const.speedup);
 end
@@ -62,25 +64,24 @@ end
 if d==1, mosaee = cat(3, mosaee, mosaee, mosaee); end % support gray image
 ratio = c/r; % we use the ratio of the mosaic image when we create the mosels
 
-% specify the height of resulting mosaic (pixels)
+% specify the height of resulting mosaic (pixels) must be a multiple of
+% the mosels size
+
+[rMosel, cMosel,~] = size(palette(1).data);
 cMosaic  = ratio*rMosaic;
+cMosaic = ceil(cMosaic/cMosel)*cMosel+1;
+rMosaic = ceil(rMosaic/rMosel)*rMosel+1;
+
+%mosaicSize(1) = ceil(r/rMosel) * rMosel;
+%mosaicSize(2) = ceil(c/cMosel) * cMosel;
+
 imMosaic = imresize(mosaee, [rMosaic, cMosaic]);
 
-mosDim = size(palette(1).data);
-rIndex = ceil(r/mosDim(1));
-cIndex = ceil(c/mosDim(2));
+rIndex = ceil(r/rMosel);
+cIndex = ceil(c/cMosel);
 
 mosaicIndexed = zeros(rIndex, cIndex, 'single');
 
-if prod(mosDim)*4/2^20 > 200
-    fprintf(1, 'The program is about to create a large matrix, press Enter to continue\n');
-    fprintf(1, 'Estimated size of the mosaic: %f MB\n', mosDim(1)*mosDim(2)*4/2^20);
-    pause
-end
-
-% todo: clean up
-mosaicSize(1) = ceil(r/mosDim(1)) * mosDim(1);
-mosaicSize(2) = ceil(c/mosDim(2)) * mosDim(2);
 imMosaic = single(imMosaic);
 mosaic = single(imMosaic);
 mosaicMean = mosaic; % each mosic is the average color of the samples (for comparison)
@@ -98,30 +99,30 @@ ii = 0;
 jj = 0;
 
 % pick out B/W and RGB samples patterns
-[inds, coordinates] = getSamplePattern(mosDim, nSamples);
-indsRGB = []; for i=0:2; indsRGB = [indsRGB, inds+mosDim(1)*mosDim(2)*i]; end
+[inds, coordinates] = getSamplePattern([rMosel,cMosel], nSamples);
+indsRGB = []; for i=0:2; indsRGB = [indsRGB, inds+rMosel*cMosel*i]; end
 indsBW = inds;
 
 tRender = tic;
-for y = 1:mosDim(1):rMosaic - mosDim(1)
-    for x = 1:mosDim(2):cMosaic - mosDim(2)
+for y = 1:rMosel:rMosaic - rMosel
+    for x = 1:cMosel:cMosaic - cMosel
         % used to place samples in mosaic
-        yStart = round( y/mosDim(1) );
-        xStart = round( x/mosDim(2) );
-        tmpTile = retrieveTile(imMosaic, [y, x], [mosDim(1), mosDim(2)]);
+        yStart = round( y/rMosel );
+        xStart = round( x/cMosel );
+        tmpTile = retrieveTile(imMosaic, [y, x], [rMosel, cMosel]);
         
         if const.debug
-            line([x, x+mosDim(2), x+mosDim(2), x, x], [y, y, y+mosDim(1),...
-                y+mosDim(1), y], 'color', 'r')
+            line([x, x+cMosel, x+cMosel, x, x], [y, y, y+rMosel,...
+                y+rMosel, y], 'color', 'r')
         end
         
         sourceSamples = tmpTile(indsRGB);
         
         if const.speedup
             if const.useColors
-                sampleSpace = moselStruct.sampleSpaceBW;
-            else
                 sampleSpace = moselStruct.sampleSpace;
+            else
+                sampleSpace = moselStruct.sampleSpaceBW;
             end
             
             sourceVector = reshape(sourceSamples', 1, numel(sourceSamples));
@@ -159,17 +160,17 @@ for y = 1:mosDim(1):rMosaic - mosDim(1)
         %for each y that is scanned r_step at a time, we need to place a mosel in
         %that position
         tmp = palette(iBest).data;
-        iIndex = ceil(y/mosDim(1));
-        jIndex = ceil(x/mosDim(2));
+        iIndex = ceil(y/rMosel);
+        jIndex = ceil(x/cMosel);
         mosaicIndexed(iIndex, jIndex) = iBest;
         tmpMean = palette(iBest).mean;
         
-        mosaicMean(yStart*mosDim(1)+1:(yStart+1)*mosDim(1), xStart*mosDim(2)+1:(xStart+1)*mosDim(2), 1) = tmpMean(1);
-        mosaicMean(yStart*mosDim(1)+1:(yStart+1)*mosDim(1), xStart*mosDim(2)+1:(xStart+1)*mosDim(2), 2) = tmpMean(2);
-        mosaicMean(yStart*mosDim(1)+1:(yStart+1)*mosDim(1), xStart*mosDim(2)+1:(xStart+1)*mosDim(2), 3) = tmpMean(3);
+        mosaicMean(yStart*rMosel+1:(yStart+1)*rMosel, xStart*cMosel+1:(xStart+1)*cMosel, 1) = tmpMean(1);
+        mosaicMean(yStart*rMosel+1:(yStart+1)*rMosel, xStart*cMosel+1:(xStart+1)*cMosel, 2) = tmpMean(2);
+        mosaicMean(yStart*rMosel+1:(yStart+1)*rMosel, xStart*cMosel+1:(xStart+1)*cMosel, 3) = tmpMean(3);
         
         try
-            mosaic(yStart*mosDim(1)+1:(yStart+1)*mosDim(1), xStart*mosDim(2)+1:(xStart+1)*mosDim(2), :) = tmp;
+            mosaic(yStart*rMosel+1:(yStart+1)*rMosel, xStart*cMosel+1:(xStart+1)*cMosel, :) = tmp;
         catch exception
             size(tmp)
             warning('Possible solution: reinit palette')
@@ -188,11 +189,11 @@ for y = 1:mosDim(1):rMosaic - mosDim(1)
         end
     end
     
-    if const.stats && mod(ii, round( mosDim(1)/const.nPrgrs ))==1
+    if const.stats && mod(ii, round( rMosel/const.nPrgrs ))==1
         fprintf(1, 'Average speed: %d s/mosel\n', averageTime);
         toc(tRender)
-        fprintf(1, '  Finished: %d%%\n', ceil(100*y/(rMosaic-mosDim(1))));
-        ETA = max(1, floor(averageTime*(rMosaic/mosDim(1)*cMosaic/mosDim(2) - ii)));
+        fprintf(1, '  Finished: %d%%\n', ceil(100*y/(rMosaic-rMosel)));
+        ETA = max(1, floor(averageTime*(rMosaic/rMosel*cMosaic/cMosel - ii)));
         fprintf(1, 'ETA: %d s\n', ETA);
     end
 end
@@ -208,6 +209,6 @@ if const.stats
     averageTime = toc(tRender) / (numel(sourceSamples) * numel(mosaicIndexed));
     fprintf(1, '\n\n average time per sample:%f\n\n', averageTime);
 end
-    
-    toc(tRender)
+
+toc(tRender)
 

@@ -3,7 +3,8 @@
 %}
 
 constants %load constants used by this script
-moselVer = 0.3; %current supported version
+moselVer = 0.30; %current supported version, use only 2 decimal places
+moselVer = sprintf('%.2f', moselVer);
 
 if moselsDir(end) == filesep, moselsDir = moselsDir(1:end-1); end
 
@@ -26,8 +27,8 @@ end
 
 if reInit
     settingsStr = ['r=', num2str(r),...
-                   ' nSamples=', num2str(collectConst.nSamples),...
-                   ' skip=', num2str(collectConst.skipMosel)];
+        ' nSamples=', num2str(collectConst.nSamples),...
+        ' skip=', num2str(collectConst.skipMosel)];
     moselStruct = collectMosaicData([r, c], moselsDir, collectConst);
     save([mosaicPaletteDir, filesep, 'Mosaic Data ver=', moselVer,...
         ' ', moselProjectname, '- ', settingsStr, '.mat'], 'moselStruct');
@@ -68,7 +69,7 @@ for iMosaic = 1:length(mosaicNames)
     close all
     mosaicName = mosaicNames{iMosaic};
     fprintf(1, 'render...%s\n', mosaicName);
-
+    
     try
         [mosaic, mosInds, mosMean] = renderMosaic(renderHeight, moselStruct, mosaicName, renderConst);
     catch Exception
