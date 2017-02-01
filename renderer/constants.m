@@ -23,17 +23,15 @@ renderConst.speedup = true; %approximately 20 times speedup
 
 renderHeight = 4000; % height of result (pixels)
 
-%moselsDir = 'C:\tmp\crosshatch';
+moselsDir = 'C:\tmp\crosshatch';
 %moselsDir = 'C:\tmp\perl'
 
 %outputDir = 'E:\Archive 2014\Projects\Mosaic\mosaicData';
-%moselsDir  = 'C:\tmp\Hateful eight'
 
-outputDir = 'C:\Users\User\Dropbox\RapidResearch\mosaicAnimation';
-
-mosaicDir = 'C:\Users\User\Dropbox\RapidResearch\mosaicAnimation\to mosaic';
-mosaicMoveDir = 'C:\Users\User\Dropbox\RapidResearch\mosaicAnimation\to mosaic\finished';
-
+outputDir = 'C:\Users\User\Dropbox\to mosaic\mosaics';
+%moves input files to this dir when finished
+mosaicMoveDir = 'C:\Users\User\Dropbox\to mosaic\finished';
+mosaicDir = 'C:\Users\User\Dropbox\to mosaic';
 
 %mosaicDir = 'E:\Archive 2014\Projects\Mosaic\To mosaic';
 mosaicPaletteDir = outputDir;
