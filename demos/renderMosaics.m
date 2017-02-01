@@ -12,19 +12,6 @@ moselProjectname = strsplit(moselsDir, filesep);
 moselProjectname = moselProjectname(end);
 moselProjectname = moselProjectname{1};
 
-imagefiles = dir([mosaicDir, filesep, '*.jpg']);
-nFiles     = length(imagefiles);
-
-fprintf(1, 'mosel project name: %s\n', moselProjectname);
-fprintf(1, 'Reading files to mosaic from %s...\n', mosaicDir);
-fprintf(1, 'Found %d image(s)\n', nFiles);
-
-mosaicNames{nFiles} = 0;
-for iFile = 1:nFiles
-    imname = [mosaicDir,filesep,imagefiles(iFile).name];
-    mosaicNames{iFile} = imname;
-end
-
 if reInit
     settingsStr = ['r=', num2str(r),...
         ' nSamples=', num2str(collectConst.nSamples),...
@@ -63,12 +50,20 @@ end
 
 if numel(moselStruct)==0, error('mosaic data file is empty'), end
 
-tTotal = tic;
-for iMosaic = 1:length(mosaicNames)
-    fprintf(1, 'mosaic number %d of %d\n', iMosaic, length(mosaicNames));
+mosaicMoveDir
+
+while true
     close all
-    mosaicName = mosaicNames{iMosaic};
-    fprintf(1, 'render...%s\n', mosaicName);
+    imagefiles = dir([mosaicDir, filesep, '*.jpg']);
+    
+    if length(imagefiles) == 0
+        fprintf(1, '.');
+        pause(10)
+        continue
+    end
+    
+    mosaicName = imagefiles(1).name; % pick the first filename
+    mosaicName = [mosaicDir, filesep, mosaicName];
     
     try
         [mosaic, mosInds, mosMean] = renderMosaic(renderHeight, moselStruct, mosaicName, renderConst);
@@ -85,5 +80,8 @@ for iMosaic = 1:length(mosaicNames)
     imwrite(mosMean/255, mosaicMeanName, 'png')
     save(mosaicIndexedName, 'mosInds');
     fprintf(1, 'Saved %s\n\n', outFilename);
+    
+    [~, name, ext] = fileparts(mosaicName);
+    moselMoveName = [mosaicMoveDir, filesep, name, ext];
+    movefile(mosaicName, moselMoveName);
 end
-toc(tTotal)

@@ -47,8 +47,6 @@ if nargin==4 % override defaults with constants
     end
 end
 
-const.useColors
-
 if const.stats
     fprintf(1, 'speedup: %d\n', const.speedup);
 end
@@ -71,9 +69,6 @@ ratio = c/r; % we use the ratio of the mosaic image when we create the mosels
 cMosaic  = ratio*rMosaic;
 cMosaic = ceil(cMosaic/cMosel)*cMosel+1;
 rMosaic = ceil(rMosaic/rMosel)*rMosel+1;
-
-%mosaicSize(1) = ceil(r/rMosel) * rMosel;
-%mosaicSize(2) = ceil(c/cMosel) * cMosel;
 
 imMosaic = imresize(mosaee, [rMosaic, cMosaic]);
 
@@ -99,9 +94,12 @@ ii = 0;
 jj = 0;
 
 % pick out B/W and RGB samples patterns
-[inds, coordinates] = getSamplePattern([rMosel,cMosel], nSamples);
-indsRGB = []; for i=0:2; indsRGB = [indsRGB, inds+rMosel*cMosel*i]; end
-indsBW = inds;
+
+indsRGB = moselStruct.samplePatternRGB;
+indsBW = moselStruct.samplePatternBW;
+%[inds, coordinates] = getSamplePattern([rMosel,cMosel], nSamples);
+%indsRGB = []; for i=0:2; indsRGB = [indsRGB, inds+rMosel*cMosel*i]; end
+%indsBW = inds;
 
 tRender = tic;
 for y = 1:rMosel:rMosaic - rMosel

@@ -15,10 +15,8 @@
 %       from a move) (default:1)
 %       blurSigma - gaussian blur sigma
 %       nPrgrs - number of progress printouts (default:10)
+%       ignoreColor - ignore a specific color from mosel
 
-% todo: add option to control printouts
-% todo: support really skipping mosels
-% todo fix indices samples
 function [moselStruct] = collectMosaicData(mosaicSize, moselsDir, varargin)
 
 constants = {};
@@ -29,6 +27,8 @@ constants.nSamples = 10;
 constants.skipMosel = 1;
 constants.blurSigma = 0.5;
 constants.nPrgrs = 10;
+constants.ignoreWhite = false;
+
 
 if nargin==3 % override defaults with constants
     try
@@ -40,6 +40,7 @@ if nargin==3 % override defaults with constants
         constants.skipMosel = argconst.skipMosel;
         constants.blurSigma = argconst.blurSigma;
         constants.nPrgrs = argconst.nPrgrs;
+        constants.ignoreWhite = argconst.ignoreWhite;
     catch
         warning('some variables were not defined by optional argumen')
     end
@@ -90,16 +91,14 @@ end
 debugRun = false; %flag to discern if we run debug print
 range = 3:constants.skipMosel:nFiles;
 [inds, coordinates] = getSamplePattern([rMosel, cMosel], constants.nSamples);
-indsRGB = [inds+rMosel*cMosel*0; inds+rMosel*cMosel*1; inds+rMosel*cMosel*2]; %2d to 3d sample indices
-indsBW = inds;
 
 index = 1;
 %nSamplesTotal = 3*constants.nSamples^2; %Note: grid*RGB
 tPalette = tic;
-for ii = 3:constants.skipMosel:nFiles % skip . and ..
+for ii = range % skip . and ..
     imname = imagefiles(ii).name;
     [~, ~, ext] = fileparts(imname);
-    if ~strcmp(ext, '.jpeg') && ~strcmp(ext, '.jpg')
+    if ~strcmp(ext, '.jpeg') && ~strcmp(ext, '.jpg') && ~strcmp(ext, '.png')
         continue
     end
     
@@ -109,7 +108,19 @@ for ii = 3:constants.skipMosel:nFiles % skip . and ..
         continue
     end
     
-    imTmp = rescaleAndCrop(im, [rMosel, cMosel]); % scale image so we can see
+    if ii==3
+        %todo: fix so we can use the coordinates
+        if constants.ignoreWhite
+            im2 = rgb2gray(im);
+            inds = inds(im2(inds)~=1);
+        end
+        
+        indsRGB = [inds + rMosel*cMosel*0; inds + rMosel*cMosel*1;...
+                   inds + rMosel*cMosel*2]; %2d to 3d sample indices
+        indsBW = inds;
+    end
+    
+    imTmp = rescaleAndCrop(im, [rMosel, cMosel]);
     palette(index).name = imname;
     
     % get samples, decide if blurred, BW too
@@ -137,7 +148,7 @@ for ii = 3:constants.skipMosel:nFiles % skip . and ..
         imagesc(moselBlurred/255)
         axis off
         hold on
-        plot(coords(:, 2), coords(:, 1), 'rO')
+        plot(coordinates(:, 2), coordinates(:, 1), 'rO')
         title('One Mosel, gaussian filtered with coordinates of the samples', 'fontsize', 12)
         pause(1)
         drawnow
@@ -161,7 +172,7 @@ if constants.stats
 end
 
 % Preprocessing:
-M =  length(palette); %number of mosels
+M = length(palette); %number of mosels
 N = numel(palette(1).samples); %total number of samples (RGB)
 sampleSpace = zeros(M, N); %matrix of all samples (M-by-N-by-3) m mosels with N samples
 sampleSpaceBW = zeros(M, N); %matrix of all samples (M-by-N) m mosels with N samples (M-by-N)
@@ -190,4 +201,7 @@ moselStruct.palette = palette;
 moselStruct.sampleSpace = sampleSpace;
 moselStruct.sampleSpaceBW = sampleSpaceBW;
 moselStruct.nSamples = constants.nSamples;
+moselStruct.samplePatternBW = indsBW;
+moselStruct.samplePatternRGB = indsRGB;
+
 % todo: remove sample from mosaics and only use sampleSpace
