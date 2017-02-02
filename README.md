@@ -9,4 +9,6 @@ Installation
 ---
 To install the library, simply add the path to 'renderer' using addpath.
 
+Examples
 
+https://cloud.githubusercontent.com/assets/14231209/22531619/6850075a-e8e2-11e6-8357-a450970149f6.jpg
