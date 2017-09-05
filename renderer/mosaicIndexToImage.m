@@ -9,7 +9,8 @@
 %  step in the frames of the movie at 30FPS. The benefit is that not all
 %  frames are used in the palette which will speed up the render process.
 
-function mosaic = mosaicIndexToImage(moselsDir, frameFormat, indices, offset, palette, gray)
+function mosaic = mosaicIndexToImage(moselsDir, frameFormat, indices, offset, palette, gray, rescale)
+%add rescale option, think about cropping without scaling
 
 if gray, palette = paletteToGray(palette); end
 
@@ -21,12 +22,15 @@ mosaic = zeros(rMosaic, cMosaic, 3);
 mosDim = size(palette(1).data);
 paletteLength = length(palette);
 
-for y = 1:mosDim(1):rMosaic - mosDim(1)
-    for x = 1:mosDim(2):cMosaic - mosDim(2)
-        iIndex = round( y/mosDim(1) );
-        jIndex = round( x/mosDim(2) );
-        ind = indices(iIndex, jIndex);
+%for y = 1:mosDim(1):rMosaic - mosDim(1)
+%    for x = 1:mosDim(2):cMosaic - mosDim(2)
+for y = 1:mosDim(1):rMosaic
+    for x = 1:mosDim(2):cMosaic
         
+        iIndex = ceil( y/mosDim(1) );
+        jIndex = ceil( x/mosDim(2) );
+        ind = indices(iIndex, jIndex);
+
         if offset~=1  % read frame using name of sample
             moselName = palette(ind).name;
             nameParts = strsplit(moselName, '_');
@@ -45,8 +49,9 @@ for y = 1:mosDim(1):rMosaic - mosDim(1)
             tile = rgb2gray(tile);
             tile = cat(3, tile, tile, tile);
         end
-        
-        mosaic(iIndex*mosDim(1)+1:(iIndex+1)*mosDim(1), jIndex*mosDim(2)+1:(jIndex+1)*mosDim(2), :) = tile;
+                
+        mosaic((iIndex-1)*mosDim(1)+1:(iIndex)*mosDim(1), ...
+                (jIndex-1)*mosDim(2)+1:(jIndex)*mosDim(2), :) = tile;
     end
 end
 

@@ -51,7 +51,7 @@ if constants.debug
 end
 % Larger mosels require filtering to provide nice samples
 mosaicSize  = round(mosaicSize);
-% mosic element number of rows and columns (pixels)
+% mosaic element number of rows and columns (pixels)
 rMosel   = mosaicSize(1);
 cMosel   = mosaicSize(2);
 ratMosel = cMosel/rMosel; %ratio

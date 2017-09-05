@@ -3,7 +3,7 @@
 %}
 
 constants %load constants used by this script
-moselVer = 0.30; %current supported version, use only 2 decimal places
+moselVer = 0.31; %current supported version, use only 2 decimal places
 moselVer = sprintf('%.2f', moselVer);
 
 if moselsDir(end) == filesep, moselsDir = moselsDir(1:end-1); end
@@ -52,6 +52,11 @@ if numel(moselStruct)==0, error('mosaic data file is empty'), end
 
 mosaicMoveDir
 
+
+spriteJsonFilename = [outputDir, filesep, 'spritemap_', moselProjectname, '.json'];
+fprintf(1, 'writing spritmap json...%s\n', spriteJsonFilename);
+writeSpriteJson(spriteJsonFilename, moselStruct.palette, false);
+
 while true
     close all
     imagefiles = dir([mosaicDir, filesep, '*.jpg']);
@@ -72,14 +77,26 @@ while true
         rethrow(Exception)
     end
     
+    
+    
     [pathStr, name, ext] = fileparts(mosaicName);
     outFilename = [outputDir, filesep, name, '_mosaic', '.png'];
     mosaicIndexedName = [outputDir, filesep, name, '_ind.mat'];
+    
     mosaicMeanName = [outputDir, filesep, name, '_mean.png'];
+    
+    mosaicJsonFilename = [outputDir, filesep, 'mosaic_', name, '.json'];
+    
+    cd(outputDir)
     imwrite(mosaic, outFilename, 'png')
     imwrite(mosMean/255, mosaicMeanName, 'png')
     save(mosaicIndexedName, 'mosInds');
     fprintf(1, 'Saved %s\n\n', outFilename);
+    
+    %write json data (spritemap and mosaic)
+    fprintf(1,'mosaic filename:%s\n', mosaicJsonFilename);
+    writeMosaicJson(mosaicJsonFilename, spriteJsonFilename, mosInds);
+    
     
     [~, name, ext] = fileparts(mosaicName);
     moselMoveName = [mosaicMoveDir, filesep, name, ext];
