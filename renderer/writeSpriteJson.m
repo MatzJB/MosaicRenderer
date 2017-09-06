@@ -5,7 +5,8 @@
 
 function writeSpriteJson(jsonFilename, palette, gray)
 %JPEGDimLimit = 65500;
-threeTextureLimit = 16384
+threeTextureLimit = 16384;
+
 len = length(palette);
 factors = factor(len);
 center = floor(length(factors)*0.5);
@@ -21,7 +22,7 @@ maxPixels = max(size(tmp));
 % test the size of the spritemap
 if max([newRows, newCols])*maxPixels > threeTextureLimit
 
-    len = length(palette);
+    
 newRows = ceil(sqrt(len));
 newCols = newRows;
 
@@ -70,12 +71,15 @@ indices = 1:newRows*newCols;
 [pathStr, jsonFilename, ext] = fileparts(jsonFilename);
 indices = reshape(indices(:), newCols, newRows)';
 indices = flip(indices); %flip because of threeJS
-spritemap = generateSpritemap(palette, indices, gray);
+indices(indices>len) = 1;
+spritemap = generateSpritemap(palette, indices, gray); %note use of len
+%fix indices issue
 
 tmp = size(palette(1).data);
 ratio = tmp(1)/tmp(2);
-pixelWidth = tmp(1);
-pixelHeight= tmp(2);
+pixelHeight= tmp(1);
+pixelWidth = tmp(2);
+
 
 % note: flipped columns and rows because of the transpose after reshape
 jsonData = ['{', '"colordata":', '"', spriteFilename, '", ',...

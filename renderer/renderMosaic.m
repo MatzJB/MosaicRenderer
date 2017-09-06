@@ -185,9 +185,9 @@ for y = 1:rMosel:rMosaic-rMosel % - rMosel, update
         xRange = (xStart-1)*cMosel+1:(xStart)*cMosel;
         
         
-        mosaic(yRange, xRange, 1) = tmpMean(1);
-        mosaic(yRange, xRange, 2) = tmpMean(2);
-        mosaic(yRange, xRange, 3) = tmpMean(3);
+        mosaicMean(yRange, xRange, 1) = tmpMean(1);
+        mosaicMean(yRange, xRange, 2) = tmpMean(2);
+        mosaicMean(yRange, xRange, 3) = tmpMean(3);
         
                 
         try
