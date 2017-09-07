@@ -52,7 +52,6 @@ if numel(moselStruct)==0, error('mosaic data file is empty'), end
 
 mosaicMoveDir
 
-
 spriteJsonFilename = [outputDir, filesep, 'spritemap_', moselProjectname, '.json'];
 fprintf(1, 'writing spritmap json...%s\n', spriteJsonFilename);
 writeSpriteJson(spriteJsonFilename, moselStruct.palette, false);
@@ -61,7 +60,7 @@ while true
     close all
     imagefiles = dir([mosaicDir, filesep, '*.jpg']);
     
-    if length(imagefiles) == 0
+    if isempty(imagefiles)
         fprintf(1, '.');
         pause(10)
         continue
@@ -76,10 +75,9 @@ while true
         warning(['rendering ', mosaicName,' was not successful'])
         rethrow(Exception)
     end
+       
     
-    
-    
-    [pathStr, name, ext] = fileparts(mosaicName);
+    [pathStr, name, ~] = fileparts(mosaicName);
     outFilename = [outputDir, filesep, name, '_mosaic', '.png'];
     mosaicIndexedName = [outputDir, filesep, name, '_ind.mat'];
     

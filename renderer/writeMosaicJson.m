@@ -10,7 +10,7 @@ function writeMosaicJson(mosaicJsonFilename, spriteJsonFilename, indices)
 spriteJsonFilename = [spriteJsonFilename, ext];
 fileID = fopen(mosaicJsonFilename, 'wt');
 
-fprintf(1, 'writing spritemap', spriteJsonFilename);
+fprintf(1, 'writing spritemap %s\n', spriteJsonFilename);
 
 compressionRatio = length(unique(indices)) / numel(indices);
 
@@ -23,7 +23,7 @@ jsonData = ['{', '"spriteMap":', '"', spriteJsonFilename, '", ',...
 fprintf(fileID, '%s\n', jsonData);
 
 indices = indices';
-%indices = rot90(indices);
+
 fprintf(fileID, '%d,\n', indices(1:end-1));
 fprintf(fileID, '%d]}\n', indices(end));
 
