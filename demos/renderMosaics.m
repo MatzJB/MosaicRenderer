@@ -3,7 +3,7 @@
 %}
 
 constants %load constants used by this script
-moselVer = 0.31; %current supported version, use only 2 decimal places
+moselVer = 0.33; %current supported version, use only 2 decimal places
 moselVer = sprintf('%.2f', moselVer);
 
 if moselsDir(end) == filesep, moselsDir = moselsDir(1:end-1); end
@@ -26,8 +26,8 @@ else % load precalculated sample and palette file
         nFiles = length(mosaicDataFiles);
         
         if nFiles>1
-            fprintf(1, 'More than one sample file was found. Please choose the one to load from the list below...\n');
-            for iFile = 1:nFiles, fprintf(1, '(%d) %s\n', iFile, mosaicDataFiles(iFile).name); end
+            fprintf(1, 'More than one sample file was found. Please choose the number to load from the list below...\n');
+            for iFile = 1:nFiles, fprintf(1, '(%d) %s created - %s\n', iFile, mosaicDataFiles(iFile).name, mosaicDataFiles(iFile).date); end
             
             id = nFiles+1;
             while id>nFiles || id<1, id = input('Select: '); end
@@ -75,14 +75,11 @@ while true
         warning(['rendering ', mosaicName,' was not successful'])
         rethrow(Exception)
     end
-       
-    
+        
     [pathStr, name, ~] = fileparts(mosaicName);
     outFilename = [outputDir, filesep, name, '_mosaic', '.png'];
     mosaicIndexedName = [outputDir, filesep, name, '_ind.mat'];
-    
     mosaicMeanName = [outputDir, filesep, name, '_mean.png'];
-    
     mosaicJsonFilename = [outputDir, filesep, 'mosaic_', name, '.json'];
     
     cd(outputDir)
@@ -94,8 +91,7 @@ while true
     %write json data (spritemap and mosaic)
     fprintf(1,'mosaic filename:%s\n', mosaicJsonFilename);
     writeMosaicJson(mosaicJsonFilename, spriteJsonFilename, mosInds);
-    
-    
+        
     [~, name, ext] = fileparts(mosaicName);
     moselMoveName = [mosaicMoveDir, filesep, name, ext];
     movefile(mosaicName, moselMoveName);

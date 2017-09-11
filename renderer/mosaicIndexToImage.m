@@ -22,11 +22,8 @@ mosaic = zeros(rMosaic, cMosaic, 3);
 mosDim = size(palette(1).data);
 paletteLength = length(palette);
 
-%for y = 1:mosDim(1):rMosaic - mosDim(1)
-%    for x = 1:mosDim(2):cMosaic - mosDim(2)
 for y = 1:mosDim(1):rMosaic
     for x = 1:mosDim(2):cMosaic
-        
         iIndex = ceil( y/mosDim(1) );
         jIndex = ceil( x/mosDim(2) );
         ind = indices(iIndex, jIndex);

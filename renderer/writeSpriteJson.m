@@ -30,11 +30,11 @@ if newRows*newCols ~= len
     fprintf(1, 'indices len:%d\n', len);
 end
 
-%generate spritemap with all indices
+% generate spritemap with all indices
 indices = 1:newRows*newCols;
 indices = reshape(indices(:), newCols, newRows)';
 indices = flip(indices); %flip because of threeJS
-indices(indices>len) = 1;
+indices(indices>len) = 1; % map same mosel to the ones left
 spritemap = generateSpritemap(palette, indices, gray); %note use of len
 
 tmp = size(palette(1).data);

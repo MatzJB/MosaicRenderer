@@ -75,14 +75,8 @@ imMosaic = imresize(mosaee, [rMosaic, cMosaic]);
 rIndex = ceil(r/rMosel);
 cIndex = ceil(c/cMosel);
 
-% new test:
-%rMosaic-rMosel ends for loop
 rIndex = ceil(rMosaic/rMosel)-1;
 cIndex = ceil(cMosaic/cMosel)-1;
-%note: matrix is 1 pixel larger than it should be
-
-
-
 mosaicIndexed = zeros(rIndex, cIndex, 'single');
 
 imMosaic = single(imMosaic);
@@ -102,28 +96,19 @@ ii = 0;
 jj = 0;
 
 % pick out B/W and RGB samples patterns
-
 indsRGB = moselStruct.samplePatternRGB;
 indsBW = moselStruct.samplePatternBW;
 %[inds, coordinates] = getSamplePattern([rMosel,cMosel], nSamples);
 %indsRGB = []; for i=0:2; indsRGB = [indsRGB, inds+rMosel*cMosel*i]; end
 %indsBW = inds;
 
-
-
 tRender = tic;
+
 for y = 1:rMosel:rMosaic-rMosel % - rMosel, update
     for x = 1:cMosel:cMosaic-cMosel% - cMosel
-        
         % used to place samples in mosaic
-        %yStart = round( y/rMosel );
-        %xStart = round( x/cMosel );
-        
-        yStart = ceil( y/rMosel ); % test
+        yStart = ceil( y/rMosel );
         xStart = ceil( x/cMosel );
-        %size(imMosaic)
-        %rMosel
-        %cMosel
         tmpTile = retrieveTile(imMosaic, [y, x], [rMosel, cMosel]);
         
         if const.debug
@@ -184,12 +169,10 @@ for y = 1:rMosel:rMosaic-rMosel % - rMosel, update
         yRange = (yStart-1)*rMosel+1:(yStart)*rMosel;
         xRange = (xStart-1)*cMosel+1:(xStart)*cMosel;
         
-        
         mosaicMean(yRange, xRange, 1) = tmpMean(1);
         mosaicMean(yRange, xRange, 2) = tmpMean(2);
         mosaicMean(yRange, xRange, 3) = tmpMean(3);
         
-                
         try
             
             mosaic(yRange, xRange, :) = tmp;
