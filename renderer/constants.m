@@ -1,6 +1,6 @@
 
 % Constants used by renderMosaics
-%add support for pearl mosaic sampling (one sample in a specific position)
+
 reInit = true; 
 % if false we will get a choice between generated mosaic files, otherwise
 % the mosaic palette will be re-calculated
@@ -9,8 +9,8 @@ collectConst = {};
 collectConst.stats = false;
 collectConst.debug = false;
 collectConst.blurMosels = true;
-collectConst.nSamples = 25; %default: 10
-collectConst.skipMosel = 2; %100
+collectConst.nSamples = 30; %default: 10
+collectConst.skipMosel = 1; %100
 collectConst.blurSigma = 0.5;
 collectConst.nPrgrs = 10;
 collectConst.ignoreWhite = false; %if mosel contains lots of white
@@ -20,15 +20,15 @@ renderConst.plot = false;
 renderConst.render = true;
 renderConst.stats = false;
 renderConst.debug = false;
-renderConst.useColors = false;
+renderConst.useColors = true; %should use colors, B/W seems to be wrong
 renderConst.speedup = true; %approximately 20 times speedup
 
-renderHeight = 4000; % height of result (pixels)
+renderHeight = 9000; % height of result (pixels)
 
 %moselsDir = 'C:\tmp\mix';
 %moselsDir = 'C:\tmp\crosshatch';
-%%moselsDir = 'C:\tmp\perl';
-moselsDir = 'C:\tmp\test2';
+moselsDir = 'C:\tmp\HofD';
+%moselsDir = 'C:\tmp\test2';
 
 %outputDir = 'E:\Archive 2014\Projects\Mosaic\mosaicData';
 
@@ -43,11 +43,9 @@ mosaicPaletteDir = outputDir;
 % read a mosel and base the dimensions on a single sample
 [r, c] = fetchImageSizeDir(moselsDir);
 
-targetHeight = 30;
+targetHeight = 60;
 factor = targetHeight/r;
 r = targetHeight;
 c = factor*c;
 
-cd(tmpPwd)
-
-%left todo: add support to add full size mosaics from directory
+%todo: add support to add full size mosaics from directory
