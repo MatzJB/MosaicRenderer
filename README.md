@@ -10,6 +10,15 @@ Installation
 To install the library, simply add the path to 'renderer' using addpath.
 
 
+How to generate mosaic element from movies
+---
+Download ffmpeg https://www.ffmpeg.org/. Given a filename, type in your terminal
+
+`
+ffmpeg.exe -i "movie_filename.avi" -r 0.2 -f image2 image%03d.jpeg`
+`
+
+The generated images can then be used by the renderer.
 
 Examples
 ---
