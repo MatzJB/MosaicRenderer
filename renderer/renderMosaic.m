@@ -65,16 +65,12 @@ ratio = c/r; % we use the ratio of the mosaic image when we create the mosels
 % specify the height of resulting mosaic (pixels) must be a multiple of
 % the mosels size
 
-[rMosel, cMosel,~] = size(palette(1).data);
+[rMosel, cMosel, ~] = size(palette(1).data);
 cMosaic  = ratio*rMosaic;
 cMosaic = ceil(cMosaic/cMosel)*cMosel+1;
 rMosaic = ceil(rMosaic/rMosel)*rMosel+1;
 
 imMosaic = imresize(mosaee, [rMosaic, cMosaic]);
-
-rIndex = ceil(r/rMosel);
-cIndex = ceil(c/cMosel);
-
 rIndex = ceil(rMosaic/rMosel)-1;
 cIndex = ceil(cMosaic/cMosel)-1;
 mosaicIndexed = zeros(rIndex, cIndex, 'single');
