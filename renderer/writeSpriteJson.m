@@ -15,7 +15,7 @@ newCols = newRows;
 
 % test on updated size
 if max([newRows, newCols])*maxPixels > threeTextureLimit
-    error(['The largest dimension of the sprite map is exceeding ', threeTextureLimit, 'pixels. Consider using smaller mosels. Bailing out.'])
+    error(['The largest dimension of the sprite map is exceeding ', num2str(threeTextureLimit), ' pixels. Consider using smaller mosels. Bailing out.'])
 end
 
 [pathstr, name, ~] = fileparts(jsonFilename);
