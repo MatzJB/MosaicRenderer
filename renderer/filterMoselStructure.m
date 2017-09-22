@@ -41,5 +41,8 @@ for i = length(moselStruct.palette):-1:1
         moselStructureFiltered.palette(i) = [];
         moselStructureFiltered.sampleSpace(i) = [];
         moselStructureFiltered.sampleSpaceBW(i) = [];
+                
+        moselStructureFiltered.samplePatternBW(i,:) = [];
+        moselStructureFiltered.samplePatternRGB(i,:) = [];
     end
 end
