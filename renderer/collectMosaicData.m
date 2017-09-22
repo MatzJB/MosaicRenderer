@@ -55,7 +55,6 @@ mosaicSize  = round(mosaicSize);
 % mosaic element number of rows and columns (pixels)
 rMosel   = mosaicSize(1);
 cMosel   = mosaicSize(2);
-ratMosel = cMosel/rMosel; %ratio
 
 if constants.nSamples > rMosel || constants.nSamples > cMosel
     warning('Number of samples is larger than resolution of mosel')
@@ -104,12 +103,12 @@ for ii = range % skip . and ..
         continue
     end
     
+    im = imread(imname);
+    
     if constants.debug && size(im,3)~=3 % we only accept RGB images
         fprintf(1, 'image %s not RGB, skipping\n', imname);
         continue
     end
-    
-    im = imread(imname);
     
     if ii==3
         % todo: fix so we can use the coordinates
@@ -148,7 +147,7 @@ for ii = range % skip . and ..
         figure
         imagesc(imTmp)
         figure
-        imagesc(moselBlurred/255)
+        imagesc(imTmp/255)
         axis off
         hold on
         plot(coordinates(:, 2), coordinates(:, 1), 'rO')
