@@ -39,10 +39,7 @@ fprintf(1, 'Marked %d/%d samples as similar\n', nSimilarSamples, length(moselStr
 for i = length(moselStruct.palette):-1:1
     if moselStructureFiltered.palette(i).dirty == 1
         moselStructureFiltered.palette(i) = [];
-        moselStructureFiltered.sampleSpace(i) = [];
-        moselStructureFiltered.sampleSpaceBW(i) = [];
-                
-        moselStructureFiltered.samplePatternBW(i,:) = [];
-        moselStructureFiltered.samplePatternRGB(i,:) = [];
+        moselStructureFiltered.sampleSpace(i,:) = [];
+        moselStructureFiltered.sampleSpaceBW(i,:) = [];
     end
 end
