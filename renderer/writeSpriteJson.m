@@ -4,7 +4,7 @@
 %  with a mosaic json to visualize a mosaic in an efficient way.
 
 function writeSpriteJson(jsonFilename, palette, gray)
-%JPEGDimLimit = 65500;
+global DEBUG
 threeTextureLimit = 16384;
 
 len = length(palette);
@@ -15,7 +15,9 @@ newCols = newRows;
 
 % test on updated size
 if max([newRows, newCols])*maxPixels > threeTextureLimit
-    error(['The largest dimension of the sprite map is exceeding ', num2str(threeTextureLimit), ' pixels. Consider using smaller mosels. Bailing out.'])
+    error(['The largest dimension of the sprite map is exceeding ',...
+        num2str(threeTextureLimit),...
+        ' pixels. Consider using smaller mosels. Bailing out.'])
 end
 
 [pathstr, name, ~] = fileparts(jsonFilename);
@@ -25,9 +27,8 @@ fileID = fopen(jsonFilename, 'w');
 fprintf(1, '%s\n', jsonFilename);
 
 if newRows*newCols ~= len
-    fprintf(1, 'Spritemap is missing elements\n');
-    fprintf(1, 'newRows:%d newCols:%d\n', newRows, newCols);
-    fprintf(1, 'indices len:%d\n', len);
+    fprintf(1, ' Spritemap is missing elements\n');
+    fprintf(1, ' newRows:%d newCols:%d\n', newRows, newCols);
 end
 
 % generate spritemap with all indices
@@ -52,10 +53,16 @@ jsonData = ['{', '"colordata":', '"', spriteFilename, '", ',...
     '"pixelHeight": ', num2str(pixelHeight), ...
     '}}'];
 
+if DEBUG
 fprintf(fileID, '%s\n', jsonData);
+end
+
 fclose(fileID);
 
+if DEBUG
 fprintf(1, '%s\n', jsonData);
-
 fprintf(1, 'writing spritemap color data %s\n', spriteFilename);
-imwrite(spritemap/255, [pathstr, filesep, spriteFilename], 'jpg', 'quality', 90)
+end
+
+imwrite(spritemap/255, [pathstr, filesep, spriteFilename], 'jpg',...
+    'quality', 90)

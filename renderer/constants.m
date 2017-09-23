@@ -1,6 +1,6 @@
 
 % Constants used by renderMosaics
-
+galobal DEBUG = false
 reInit = true; 
 % if false we will get a choice between generated mosaic files, otherwise
 % the mosaic palette will be re-calculated
@@ -9,8 +9,8 @@ collectConst = {};
 collectConst.stats = false;
 collectConst.debug = false;
 collectConst.blurMosels = true;
-collectConst.nSamples = 30; %default: 10
-collectConst.skipMosel = 1; %100
+collectConst.nSamples = 10; %default: 10
+collectConst.skipMosel = 15; %100
 collectConst.blurSigma = 0.5;
 collectConst.nPrgrs = 10;
 collectConst.ignoreWhite = false; %if mosel contains lots of white
