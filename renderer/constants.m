@@ -1,6 +1,6 @@
 
 % Constants used by renderMosaics
-galobal DEBUG = false
+DEBUG = false;
 reInit = true; 
 % if false we will get a choice between generated mosaic files, otherwise
 % the mosaic palette will be re-calculated
@@ -9,9 +9,9 @@ collectConst = {};
 collectConst.stats = false;
 collectConst.debug = false;
 collectConst.blurMosels = true;
-collectConst.nSamples = 10; %default: 10
-collectConst.skipMosel = 15; %100
-collectConst.blurSigma = 0.5;
+collectConst.nSamples = 15; %default: 10
+collectConst.skipMosel = 1; %100
+collectConst.blurSigma = 1.5;
 collectConst.nPrgrs = 10;
 collectConst.ignoreWhite = false; %if mosel contains lots of white
 
@@ -20,7 +20,7 @@ renderConst.plot = false;
 renderConst.render = true;
 renderConst.stats = false;
 renderConst.debug = false;
-renderConst.useColors = true; %should use colors, B/W seems to be wrong
+renderConst.useColors = false; %should use colors, B/W seems to be wrong
 renderConst.speedup = true; %approximately 20 times speedup
 
 renderHeight = 9000; % height of result (pixels)
@@ -29,6 +29,7 @@ renderHeight = 9000; % height of result (pixels)
 %moselsDir = 'C:\tmp\crosshatch';
 moselsDir = 'C:\tmp\HofD';
 %moselsDir = 'C:\tmp\test2';
+%moselsDir = 'C:\tmp\Pickle';
 
 %outputDir = 'E:\Archive 2014\Projects\Mosaic\mosaicData';
 
