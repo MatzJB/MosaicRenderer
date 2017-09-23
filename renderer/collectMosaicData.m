@@ -138,7 +138,7 @@ for ii = range % skip . and ..
     palette(index).data = imTmp;
     
     if size(tmpSamples, 3)==1
-        palette(index).mean=[mean(tmpSamples), mean(tmpSamples), mean(tmpSamples)];
+        palette(index).mean = [mean(tmpSamples), mean(tmpSamples), mean(tmpSamples)];
     else
         palette(index).mean = mean(tmpSamples);
     end
