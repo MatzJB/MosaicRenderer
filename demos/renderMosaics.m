@@ -53,6 +53,7 @@ if numel(moselStruct)==0, error('mosaic data file is empty'), end
 mosaicMoveDir
 
 moselStruct = filterMoselStructure(moselStruct, 10);
+moselStruct = sortMoselStructure(moselStruct, true);
 
 spriteJsonFilename = [outputDir, filesep, 'spritemap_', moselProjectname, '.json'];
 fprintf(1, 'writing spritmap json...%s\n', spriteJsonFilename);
