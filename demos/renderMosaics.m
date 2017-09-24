@@ -52,7 +52,7 @@ if numel(moselStruct)==0, error('mosaic data file is empty'), end
 
 mosaicMoveDir
 
-moselStruct = filterMoselStructure(moselStruct, 10);
+%moselStruct = filterMoselStructure(moselStruct, 1);
 moselStruct = sortMoselStructure(moselStruct, true);
 
 spriteJsonFilename = [outputDir, filesep, 'spritemap_', moselProjectname, '.json'];

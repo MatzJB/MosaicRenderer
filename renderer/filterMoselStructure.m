@@ -22,11 +22,12 @@ nMosels= length(moselStruct.palette);
 for j = 1:nMosels-1
     for i = j+1:nMosels
         if moselStructureFiltered.palette(j).dirty == 0
-            v = single( moselStruct.palette(i).samples );
-            w = single( moselStruct.palette(j).samples );
+            %v = single( moselStruct.palette(i).samples );
+            %w = single( moselStruct.palette(j).samples );
+            v = moselStruct.palette(i).mean;
+            w = moselStruct.palette(j).mean;
             sumdiff = sum(abs(v - w));
-            
-            if sumdiff/nSamples  < sampleThreshold %threshold using "difference per sample"
+            if sumdiff  < sampleThreshold %threshold using "difference per sample"
                 nSimilarSamples = nSimilarSamples+1;
                 moselStructureFiltered.palette(j).dirty = 1; %will be removed
             end
