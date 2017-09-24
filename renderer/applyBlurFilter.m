@@ -13,6 +13,9 @@ for i=1:2
     end
 end
 
-for i=1:size(im,3)
-    im(:, :, i) = conv2(im(:, :, i), kernel, 'same'); %same valid
-end
+
+im = imfilter(im, double(kernel), 'replicate');
+
+%for i=1:size(im,3)
+%    im(:, :, i) = conv2(im(:, :, i), kernel, 'same'); %same valid
+%end

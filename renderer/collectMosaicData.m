@@ -82,7 +82,8 @@ iPrgs   = 1;
 
 % todo: (otimization) bypass if no blurring is used
 if constants.blurMosels
-    blurKernel = single( fspecial('gaussian', [rMosel, cMosel], constants.blurSigma) );
+    blurKernel = single( fspecial('gaussian', [rMosel, cMosel],...
+        constants.blurSigma));
 else % bypassing blurring
     blurKernel = zeros(rMosel, cMosel);
     blurKernel(ceil(end*0.5), floor(end*0.5)+1) = 1;
@@ -125,9 +126,11 @@ for ii = range % skip . and ..
     imTmp = rescaleAndCrop(im, [rMosel, cMosel]);
     palette(index).name = imname;
     
+    %save the data before blurring, only use blurring for sampling
+    palette(index).data = imTmp;
     % get samples, decide if blurred, BW too
     if constants.blurMosels
-        imTmp = applyBlurFilter(single(imTmp), blurKernel);
+        imTmp = applyBlurFilter(imTmp, blurKernel);
     end
     
     tmpSamples = imTmp(indsRGB);
@@ -135,7 +138,7 @@ for ii = range % skip . and ..
     palette(index).samples = tmpSamples;
     tmpSamplesGray = 255*rgb2gray(reshape(im2double(tmpSamples), nSamplesTotal/3, 3));
     palette(index).samplesBW = tmpSamplesGray;
-    palette(index).data = imTmp;
+    
     
     if size(tmpSamples, 3)==1
         palette(index).mean = [mean(tmpSamples), mean(tmpSamples), mean(tmpSamples)];
@@ -146,8 +149,8 @@ for ii = range % skip . and ..
     if constants.debug && ~debugRun
         figure
         imagesc(imTmp)
-        figure
-        imagesc(imTmp/255)
+        %figure
+        %imagesc(imTmp/255)
         axis off
         hold on
         plot(coordinates(:, 2), coordinates(:, 1), 'rO')
