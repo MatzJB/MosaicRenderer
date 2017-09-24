@@ -21,9 +21,8 @@ warning('off', 'images:initSize:adjustingMag');
 mosaic = [];
 mosaicIndexed = [];
 palette = moselStruct.palette;
-nSamples = moselStruct.nSamples;
 
-%default constants:
+% default constants:
 const = {};
 const.plot = false;
 const.render = true;
@@ -94,9 +93,6 @@ jj = 0;
 % pick out B/W and RGB samples patterns
 indsRGB = moselStruct.samplePatternRGB;
 indsBW = moselStruct.samplePatternBW;
-%[inds, coordinates] = getSamplePattern([rMosel,cMosel], nSamples);
-%indsRGB = []; for i=0:2; indsRGB = [indsRGB, inds+rMosel*cMosel*i]; end
-%indsBW = inds;
 
 tRender = tic;
 
@@ -152,9 +148,9 @@ for y = 1:rMosel:rMosaic-rMosel % - rMosel, update
             end
         end
         
-        %Place in mosaic matrix in steps of r_mosel and c_mosel
-        %for each y that is scanned r_step at a time, we need to place a mosel in
-        %that position
+        % Place in mosaic matrix in steps of r_mosel and c_mosel
+        % for each y that is scanned r_step at a time, we need to place a mosel in
+        % that position.
         tmp = palette(iBest).data;
         iIndex = ceil(y/rMosel);
         jIndex = ceil(x/cMosel);
