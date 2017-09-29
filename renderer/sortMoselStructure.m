@@ -7,36 +7,35 @@
 function moselStructureSorted = sortMoselStructure(moselStruct, useMean)
 moselStructureSorted = moselStruct;
 
-if useMean % using the mean value of the samples
+if useMean % using the mean value of the samples, seems to produce poor sorting
     [~, len] = size(moselStruct.palette);
-    tmp = zeros(len,1,3);
+    tmp = zeros(len, 3);
     for i = 1:len
-        tmp(i, 1, :) = moselStruct.palette(i).mean;
+        tmp(i, :) = moselStruct.palette(i).mean;
     end
+else
+    % using the RGB samples and taking the mean (should be the same as
+    % above, but provide a better sorting of uniformly colored mosels)
     
-    %RGB to index: R*255 + G*255^2 + B*255^3 <-[0,16581375]
-    cols = tmp(:, 1, 1)*255 +...
-        tmp(:, 1, 2)*255^2 +...
-        tmp(:, 1, 3)*255^3;
-    [~, ind] = sort(cols);
-else % using the samples
     nSamples = moselStruct.nSamples;
     [r, ~] = size(moselStruct.sampleSpace);
     cols = zeros(r, 3);
     
     for i = 1:r
-        cols(i, :) = mean(reshape(moselStruct.sampleSpace(i,:),...
+        tmp(i, :) = mean(reshape(moselStruct.sampleSpace(i,:),...
             nSamples^2, 3), 1);
     end
-    
-    cols = cols(:, 1)*255 + cols(:, 2)*255*255 + cols(:, 3)*255*255*255;
-    [~, ind] = sort(cols);
 end
+
+cols = tmp;
+cols2 = rgb2hsv(cols/255);
+[~, ind] = sortrows(cols2, [-1 -3 2]);
 
 if all( sort(ind)==ind )
     warning('palette is already sorted')
     return
 end
+
 
 % rearrange into sorted order
 for i = length(moselStruct.palette):-1:1
@@ -45,4 +44,3 @@ for i = length(moselStruct.palette):-1:1
     moselStructureSorted.sampleSpace(i, :) = moselStruct.sampleSpace(index, :);
     moselStructureSorted.sampleSpaceBW(i, :) = moselStruct.sampleSpaceBW(index, :);
 end
-
