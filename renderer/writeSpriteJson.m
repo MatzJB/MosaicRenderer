@@ -40,7 +40,7 @@ spritemap = generateSpritemap(palette, indices, gray); %note use of len
 
 tmp = size(palette(1).data);
 ratio = tmp(1)/tmp(2);
-pixelHeight= tmp(1);
+pixelHeight = tmp(1);
 pixelWidth = tmp(2);
 
 % note: flipped columns and rows because of the transpose after reshape
@@ -53,16 +53,18 @@ jsonData = ['{', '"colordata":', '"', spriteFilename, '", ',...
     '"pixelHeight": ', num2str(pixelHeight), ...
     '}}'];
 
-if DEBUG
 fprintf(fileID, '%s\n', jsonData);
+
+if DEBUG
+    fprintf(1, '%s\n', jsonData);
 end
 
 fclose(fileID);
 
 if DEBUG
-fprintf(1, '%s\n', jsonData);
-fprintf(1, 'writing spritemap color data %s\n', spriteFilename);
+    fprintf(1, '%s\n', jsonData);
+    fprintf(1, 'writing spritemap color data %s\n', spriteFilename);
 end
 
 imwrite(spritemap/255, [pathstr, filesep, spriteFilename], 'jpg',...
-    'quality', 90)
+    'quality', 95)
