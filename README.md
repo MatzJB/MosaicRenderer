@@ -18,7 +18,17 @@ Download ffmpeg https://www.ffmpeg.org/. Given a filename, type in your terminal
 ffmpeg.exe -i "movie_filename.avi" -r 0.2 -f image2 image%03d.jpeg`
 `
 
-The generated images can then be used by the renderer.
+If the source video contains black borders you can crop the video using
+
+`-vf "crop=1280:520:0:100"`
+
+The generated images can then be used by the renderer (see constants.m).
+
+
+Viewer
+---
+I have written an efficient mosaic viewer in Javascript/ThreeJS that takes the generated json files and allows the viewer to zoom in and out of the mosaic image.
+
 
 Examples
 ---
