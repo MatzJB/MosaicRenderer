@@ -37,7 +37,7 @@ if nargin==4 % override defaults with constants
         argconst = varargin{1};
         const.plot = argconst.plot;
         const.render = argconst.render;
-        const.stats  = argconst.stats;
+        const.stats = argconst.stats;
         const.debug = argconst.debug;
         const.useColors = argconst.useColors;
         const.speedup = argconst.speedup;
@@ -52,7 +52,7 @@ end
 
 try
     mosaee = imread(mosaicName);
-catch Exception
+catch
     fprintf(1, 'Couldn''t find image file ''%s''\n', mosaicName);
     return
 end
@@ -60,7 +60,7 @@ end
 [r, c, d] = size(mosaee); % the image to be 'mosaiced'
 if d==1, mosaee = cat(3, mosaee, mosaee, mosaee); end % support gray image
 ratio = c/r; % we use the ratio of the mosaic image when we create the mosels
-
+mosaee = double(mosaee);
 % specify the height of resulting mosaic (pixels) must be a multiple of
 % the mosels size
 
@@ -73,12 +73,13 @@ imMosaic = imresize(mosaee, [rMosaic, cMosaic]);
 rIndex = ceil(rMosaic/rMosel)-1;
 cIndex = ceil(cMosaic/cMosel)-1;
 mosaicIndexed = zeros(rIndex, cIndex, 'single');
-
-imMosaic = single(imMosaic);
 mosaic = single(imMosaic);
-mosaicMean = mosaic; % each mosic is the average color of the samples (for comparison)
+
+mosaicMean = [];
 
 if const.render
+    
+    mosaicMean = mosaic; % each mosic is the average color of the samples (for comparison)
     figure
     h = imshow(mosaic/255.0);
     title('Mosaic (render)')
@@ -96,8 +97,8 @@ indsBW = moselStruct.samplePatternBW;
 
 tRender = tic;
 
-for y = 1:rMosel:rMosaic-rMosel % - rMosel, update
-    for x = 1:cMosel:cMosaic-cMosel% - cMosel
+for y = 1:rMosel:rMosaic-rMosel
+    for x = 1:cMosel:cMosaic-cMosel
         % used to place samples in mosaic
         yStart = ceil( y/rMosel );
         xStart = ceil( x/cMosel );
