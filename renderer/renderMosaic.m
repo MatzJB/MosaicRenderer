@@ -74,11 +74,9 @@ rIndex = ceil(rMosaic/rMosel)-1;
 cIndex = ceil(cMosaic/cMosel)-1;
 mosaicIndexed = zeros(rIndex, cIndex, 'single');
 mosaic = single(imMosaic);
-
 mosaicMean = [];
 
 if const.render
-    
     mosaicMean = mosaic; % each mosic is the average color of the samples (for comparison)
     figure
     h = imshow(mosaic/255.0);

@@ -11,7 +11,7 @@ collectConst.debug = false;
 collectConst.blurMosels = true;
 collectConst.nSamples = 15; %default: 10
 collectConst.skipMosel = 1; %100
-collectConst.blurSigma = 1.5;
+collectConst.blurSigma = 1.2;
 collectConst.nPrgrs = 10;
 collectConst.ignoreWhite = false; %if mosel contains lots of white
 
@@ -22,17 +22,18 @@ renderConst.stats = false;
 renderConst.debug = false;
 renderConst.useColors = false; %should use colors, B/W seems to be wrong
 renderConst.speedup = true; %approximately 20 times speedup
+recursive = false; % if we want to build the mosaic recursively to provide a "infinite zoom"
 
-renderHeight = 9000; % height of result (pixels)
+renderHeight = 12000; % height of result (pixels)
 
-%moselsDir = 'C:\tmp\mix';
+moselsDir = 'C:\tmp\mix';
 %moselsDir = 'C:\tmp\crosshatch';
-moselsDir = 'C:\tmp\HofD';
+%moselsDir = 'C:\tmp\HofD';
 %moselsDir = 'C:\tmp\test2';
 %moselsDir = 'C:\tmp\Pickle';
+%moselsDir = 'C:\tmp\Time Lapse';
 
 %outputDir = 'E:\Archive 2014\Projects\Mosaic\mosaicData';
-
 %outputDir = 'C:\Users\User\Dropbox\to mosaic\mosaics';
 outputDir = 'C:\Users\User\Dropbox\Graphics_programming\projects\mosaic_viewer\src\gallery';
 %moves input files to this dir when finished
@@ -44,9 +45,9 @@ mosaicPaletteDir = outputDir;
 % read a mosel and base the dimensions on a single sample
 [r, c] = fetchImageSizeDir(moselsDir);
 
-targetHeight = 60;
+targetHeight = 40;
 factor = targetHeight/r;
 r = targetHeight;
-c = factor*c;
+c = ceil(factor*c);
 
 %todo: add support to add full size mosaics from directory
