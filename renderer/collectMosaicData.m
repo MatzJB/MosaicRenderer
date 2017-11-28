@@ -67,18 +67,18 @@ if constants.debug
     fprintf(1, 'Creating palette from %s...\n', pwd);
 end
 
-tmpPwd     = pwd;
+tmpPwd = pwd;
 
 % todo: we might wish to simply supply path to moselsDir instead of moving there
 cd(moselsDir)
 imagefiles = dir('*');
-nFiles     = length(imagefiles);
+nFiles = length(imagefiles);
 if constants.debug
     fprintf(1, 'Reading, cropping and sampling %d mosels...\n', nFiles);
 end
 
 progPerc = linspace(0, 100, constants.nPrgrs);
-iPrgs   = 1;
+iPrgs = 1;
 
 % todo: (otimization) bypass if no blurring is used
 if constants.blurMosels
@@ -98,13 +98,25 @@ index = 1;
 tPalette = tic;
 
 for ii = range % skip . and ..
-    imname = imagefiles(ii).name;
-    [~, ~, ext] = fileparts(imname);
-    if ~strcmp(ext, '.jpeg') && ~strcmp(ext, '.jpg') && ~strcmp(ext, '.png')
-        continue
+        
+    successfulLoad = false;
+    while not(successfulLoad)
+        
+        imname = imagefiles(ii).name;
+        [~, ~, ext] = fileparts(imname);
+        if ~strcmp(ext, '.jpeg') && ~strcmp(ext, '.jpg') && ~strcmp(ext, '.png')
+            continue
+        end
+        
+        try
+            im = imread(imname);
+        catch exception
+            fprintf(1, 'Encountered an issue loading image file %s.\n', imname);
+            successfulLoad = false;
+            continue
+        end
+        successfulLoad = true;
     end
-    
-    im = imread(imname);
     
     if constants.debug && size(im,3)~=3 % we only accept RGB images
         fprintf(1, 'image %s not RGB, skipping\n', imname);
@@ -117,12 +129,13 @@ for ii = range % skip . and ..
             im2 = rgb2gray(im);
             inds = inds(im2(inds)~=1);
         end
-        
-        indsRGB = [inds + rMosel*cMosel*0; inds + rMosel*cMosel*1;...
+                
+        indsRGB = [inds + rMosel*cMosel*0, inds + rMosel*cMosel*1,...
             inds + rMosel*cMosel*2]; % 2d to 3d sample indices
         indsBW = inds;
     end
     
+    %indsRGB
     imTmp = rescaleAndCrop(im, [rMosel, cMosel]);
     palette(index).name = imname;
     
@@ -136,13 +149,19 @@ for ii = range % skip . and ..
     tmpSamples = imTmp(indsRGB);
     nSamplesTotal = numel(indsRGB);
     palette(index).samples = tmpSamples;
-    tmpSamplesGray = 255*rgb2gray(reshape(im2double(tmpSamples), nSamplesTotal/3, 3));
+    tmpSamplesGray = 255*rgb2gray(reshape(im2double(tmpSamples), nSamplesTotal/3, 3)); %was 255*
     palette(index).samplesBW = tmpSamplesGray;
     
     
+    if any(tmpSamplesGray>255)
+        warning('gray sample values were found to be too high')
+    end
+    
     if size(tmpSamples, 3)==1
         palette(index).mean = [mean(tmpSamples), mean(tmpSamples), mean(tmpSamples)];
+        %palette(index).mean = [mean(tmpSamples), mean(tmpSamples), mean(tmpSamples)];
     else
+        %tmpSamples
         palette(index).mean = mean(tmpSamples);
     end
     
@@ -191,7 +210,6 @@ if speedup
         end
     catch Exception
         numel(palette(1).samples)
-        size(palette(ii).samples')
         ii
         rethrow(Exception)
     end
@@ -199,10 +217,12 @@ if speedup
     cd(tmpPwd)
 end
 
-moselStruct.ver = 0.33;
+moselStruct.ver = '0.35';
 moselStruct.palette = palette;
+
 moselStruct.sampleSpace = sampleSpace;
 moselStruct.sampleSpaceBW = sampleSpaceBW;
 moselStruct.nSamples = constants.nSamples;
 moselStruct.samplePatternBW = indsBW;
 moselStruct.samplePatternRGB = indsRGB;
+moselStruct.moselsDir = moselsDir;

@@ -8,9 +8,14 @@ function moselStructureSorted = sortMoselStructure(moselStruct, useMean)
 moselStructureSorted = moselStruct;
 
 if useMean % using the mean value of the samples, seems to produce poor sorting
-    [~, len] = size(moselStruct.palette);
-    tmp = zeros(len, 3);
-    for i = 1:len
+    [r, ~] = size(moselStruct.palette);
+    tmp = zeros(r, 3);
+
+    %fix this!!!
+    size(moselStruct.palette(1))
+    
+    for i = 1:r
+        i
         tmp(i, :) = moselStruct.palette(i).mean;
     end
 else
