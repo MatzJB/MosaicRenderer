@@ -53,52 +53,90 @@ if numel(moselStruct)==0, error('mosaic data file is empty'), end
 
 mosaicMoveDir
 
-moselStruct = filterMoselStructure(moselStruct, 0.05);
-moselStruct = sortMoselStructure(moselStruct, false);
-
+moselStruct = filterMoselStructure(moselStruct, 10); % 5
+%moselStruct = sortMoselStructure(moselStruct, true);
+%bug: true sort yields error
 spriteJsonFilename = [outputDir, filesep, 'spritemap_', moselProjectname, '.json'];
-fprintf(1, 'writing spritemap json...%s\n', spriteJsonFilename);
+fprintf(1, 'writing spritemap %s\n', spriteJsonFilename);
 writeSpriteJson(spriteJsonFilename, moselStruct.palette, false);
 
-while true
-    close all
-    imagefiles = dir([mosaicDir, filesep, '*.jpg']);
-    
-    if isempty(imagefiles)
-        fprintf(1, '.');
-        pause(10)
-        continue
+%recursive render of the mosaic database
+if recursive
+    %pick all images from moselstruct
+    for i=1:numel(moselStruct.palette)
+        
+        %mosaicName = imagefiles(1).name; % pick the first filename
+        pathStr = moselStruct.moselsDir;
+        mosaicName = moselStruct.palette(i).name;
+        
+        try
+            [mosaic, mosInds, mosMean] = renderMosaic(renderHeight, moselStruct, mosaicName, renderConst);
+        catch Exception
+            printf(1, ['rendering ', mosaicName,' was not successful'])
+            rethrow(Exception)
+        end
+        name=mosaicName;
+        
+        %[pathStr, name, ~] = fileparts(mosaicName);
+        outFilename = [outputDir, filesep, name, '_mosaic', '.png'];
+        mosaicIndexedName = [outputDir, filesep, name, '_ind.mat'];
+        mosaicMeanName = [outputDir, filesep, name, '_mean.png'];
+        mosaicJsonFilename = [outputDir, filesep, 'mosaic_', name, '.json'];
+        
+        if renderConst.render
+            cd(outputDir)
+            imwrite(mosaic, outFilename, 'png')
+            imwrite(mosMean/255, mosaicMeanName, 'png')
+            save(mosaicIndexedName, 'mosInds');
+            fprintf(1, 'Saved %s\n\n', outFilename);
+        end
+        
+        %write json data (spritemap and mosaic)
+        fprintf(1,'mosaic filename:%s\n', mosaicJsonFilename);
+        writeMosaicJson(mosaicJsonFilename, spriteJsonFilename, mosInds);
+    end
+else
+    while true
+        close all
+        imagefiles = dir([mosaicDir, filesep, '*.jpg']);
+        
+        if isempty(imagefiles)
+            fprintf(1, '.');
+            pause(10)
+            continue
+        end
+        
+        mosaicName = imagefiles(1).name; % pick the first filename
+        mosaicName = [mosaicDir, filesep, mosaicName];
+        
+        try
+            [mosaic, mosInds, mosMean] = renderMosaic(renderHeight, moselStruct, mosaicName, renderConst);
+        catch Exception
+            warning(['rendering ', mosaicName,' was not successful'])
+            rethrow(Exception)
+        end
+        
+        [pathStr, name, ~] = fileparts(mosaicName);
+        outFilename = [outputDir, filesep, name, '_mosaic', '.png'];
+        mosaicIndexedName = [outputDir, filesep, name, '_ind.mat'];
+        mosaicMeanName = [outputDir, filesep, name, '_mean.png'];
+        mosaicJsonFilename = [outputDir, filesep, 'mosaic_', name, '.json'];
+        
+        if renderConst.render
+            cd(outputDir)
+            imwrite(mosaic, outFilename, 'png')
+            imwrite(mosMean/255, mosaicMeanName, 'png')
+            save(mosaicIndexedName, 'mosInds');
+            fprintf(1, 'Saved %s\n\n', outFilename);
+        end
+        
+        %write json data (spritemap and mosaic)
+        %fprintf(1, 'mosaic filename:%s\n', mosaicJsonFilename);
+        writeMosaicJson(mosaicJsonFilename, spriteJsonFilename, mosInds);
+        
+        [~, name, ext] = fileparts(mosaicName);
+        moselMoveName = [mosaicMoveDir, filesep, name, ext];
+        movefile(mosaicName, moselMoveName);
     end
     
-    mosaicName = imagefiles(1).name; % pick the first filename
-    mosaicName = [mosaicDir, filesep, mosaicName];
-    
-    try
-        [mosaic, mosInds, mosMean] = renderMosaic(renderHeight, moselStruct, mosaicName, renderConst);
-    catch Exception
-        warning(['rendering ', mosaicName,' was not successful'])
-        rethrow(Exception)
-    end
-    
-    [pathStr, name, ~] = fileparts(mosaicName);
-    outFilename = [outputDir, filesep, name, '_mosaic', '.png'];
-    mosaicIndexedName = [outputDir, filesep, name, '_ind.mat'];
-    mosaicMeanName = [outputDir, filesep, name, '_mean.png'];
-    mosaicJsonFilename = [outputDir, filesep, 'mosaic_', name, '.json'];
-    
-    if renderConst.render
-        cd(outputDir)
-        imwrite(mosaic, outFilename, 'png')
-        imwrite(mosMean/255, mosaicMeanName, 'png')
-        save(mosaicIndexedName, 'mosInds');
-        fprintf(1, 'Saved %s\n\n', outFilename);
-    end
-    
-    %write json data (spritemap and mosaic)
-    fprintf(1,'mosaic filename:%s\n', mosaicJsonFilename);
-    writeMosaicJson(mosaicJsonFilename, spriteJsonFilename, mosInds);
-    
-    [~, name, ext] = fileparts(mosaicName);
-    moselMoveName = [mosaicMoveDir, filesep, name, ext];
-    movefile(mosaicName, moselMoveName);
 end
