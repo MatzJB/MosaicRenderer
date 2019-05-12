@@ -64,7 +64,11 @@ I have written an efficient mosaic viewer in Javascript/ThreeJS that takes the g
 Examples
 ---
 
-Using mosaic elements of Escher's "Hand with Reflecting Sphere" lithograph. The mosaic elements are frames from movies Memento, Triangle, Iron man, ....
+Spritemap of frames from the movie "house of flying daggers". This mosaic spritemap works especially well because of its wide color palette. The details however are lacking.
+
+![spritemap_HofD](https://user-images.githubusercontent.com/14231209/57585277-7e31be00-74e6-11e9-9dfd-f72b2d9ecfa8.jpg)
+
+Escher's "Hand with Reflecting Sphere" lithograph. The mosaic elements in this example is from movies: Memento, Triangle, Iron man, ....
 ![Escher-hand-sphere-reflection-mosaic](https://cloud.githubusercontent.com/assets/14231209/22531619/6850075a-e8e2-11e6-8357-a450970149f6.jpg)
 
 ![130831191353-13-iconic-marilyn-restricted-horizontal-large-gallery_mosaic](https://user-images.githubusercontent.com/14231209/57584481-05c5ff80-74dc-11e9-8144-5b30e9ef435a.png)
