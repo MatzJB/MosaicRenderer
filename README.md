@@ -54,7 +54,7 @@ I have written an efficient mosaic viewer in Javascript/ThreeJS that takes the g
 Examples
 ---
 
-Using mosaic elements from several movie frames (note: educational use) of Escher's "Hand with Reflecting Sphere" lithograph.
+Using mosaic elements of Escher's "Hand with Reflecting Sphere" lithograph.
 ![Escher-hand-sphere-reflection-mosaic](https://cloud.githubusercontent.com/assets/14231209/22531619/6850075a-e8e2-11e6-8357-a450970149f6.jpg)
 
 Using pearl beads:
