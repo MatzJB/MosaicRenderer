@@ -67,8 +67,7 @@ Examples
 Using mosaic elements of Escher's "Hand with Reflecting Sphere" lithograph.
 ![Escher-hand-sphere-reflection-mosaic](https://cloud.githubusercontent.com/assets/14231209/22531619/6850075a-e8e2-11e6-8357-a450970149f6.jpg)
 
-Using pearl beads:
-![hand-with-reflecting-sphere-by-curlie-11jpg-294924_mosaic_zip_mosaic](https://cloud.githubusercontent.com/assets/14231209/22531650/93e27c18-e8e2-11e6-8ed8-7668fce8d8dd.jpg)
+![130831191353-13-iconic-marilyn-restricted-horizontal-large-gallery_mosaic](https://user-images.githubusercontent.com/14231209/57584481-05c5ff80-74dc-11e9-8144-5b30e9ef435a.png)
 
 ![Beads of Super Mario](https://cloud.githubusercontent.com/assets/14231209/22531633/7b4ae0c8-e8e2-11e6-813d-feae336bccc4.png)
 
